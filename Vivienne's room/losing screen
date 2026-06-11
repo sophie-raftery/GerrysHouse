@@ -1,0 +1,44 @@
+import pygame
+from os.path import join
+
+#general set up
+pygame.init()
+WINDOW_SIZE = (1280, 720)
+screen = pygame.display.set_mode(WINDOW_SIZE)
+pygame.display.set_caption("Jarry's House")
+
+fullscreen = False
+running = True
+
+#import
+game_over = pygame.image.load(join("images", "game_over.png")).convert_alpha()
+game_over_rect = game_over.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+
+restart_button = pygame.image.load(join("images", "resart_button.png")).convert_alpha()
+restart_button_rect = restart_button.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F11:
+                fullscreen = not fullscreen
+                if fullscreen:
+                    screen = pygame.display.set_mode(
+                        (0, 0), pygame.FULLSCREEN
+                    )
+                else:
+                    screen = pygame.display.set_mode(
+                        WINDOW_SIZE
+                    )
+
+    #Draw image
+    screen.fill("red") #background colour
+    #display image
+    screen.blit(game_over,game_over_rect)
+    screen.blit(restart_button, restart_button_rect)    
+    pygame.display.flip()
+pygame.quit()
+ 
+ 
