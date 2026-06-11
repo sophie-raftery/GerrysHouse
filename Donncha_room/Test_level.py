@@ -12,6 +12,8 @@ class Player(pygame.sprite.Sprite):
 
         self.heath =  3
 
+        self.image = pygame.transform.scale_by(self.image, 1)
+
 
     def update(self, dt):
 
@@ -25,6 +27,7 @@ class Player(pygame.sprite.Sprite):
 
 
 #images
+background_img = pygame.image.load("images/garden.png")
 player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
@@ -50,6 +53,7 @@ while running:
 
     all_sprites.update(dt)
     display_surface.fill("lightGreen")
+    display_surface.blit(background_img, (0,0))
     all_sprites.draw(display_surface)
     pygame.display.update()
 
