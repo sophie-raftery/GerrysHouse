@@ -26,14 +26,19 @@ class Player(pygame.sprite.Sprite):
 
 #images
 player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
+
+pygame.init()
+WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
+display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+
+#background image scaled to fit window - sophie
+background_surf = pygame.image.load("images/gardenTestingScreenSize.png").convert()
+background_surf = pygame.transform.scale(
+    background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
+)
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
-
-
-pygame.init()
-WINDOW_WIDTH, WINDOW_HEIGHT =   1280, 720
-display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption('Test level')
 running = True
 clock = pygame.time.Clock()
@@ -49,7 +54,8 @@ while running:
             running = False
 
     all_sprites.update(dt)
-    display_surface.fill("lightGreen")
+    #draw background image
+    display_surface.blit(background_surf, (0, 0))
     all_sprites.draw(display_surface)
     pygame.display.update()
 
