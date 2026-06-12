@@ -1,7 +1,6 @@
 import pygame
 import random
 from os.path import join
-import os
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
@@ -12,8 +11,6 @@ class Player(pygame.sprite.Sprite):
         self.speed = 300
 
         self.heath =  3
-
-        self.image = pygame.transform.scale_by(self.image, 1)
 
 
     def update(self, dt):
@@ -26,52 +23,30 @@ class Player(pygame.sprite.Sprite):
         self.direction = self.direction.normalize() if self.direction else self.direction
         self.rect.center += self.direction * self.speed * dt
 
-
-#images
-background_img = pygame.image.load("images/garden.png")
-player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
-
-pygame.init()
-WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
-display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-
-#background image scaled to fit window - sophie
-background_surf = pygame.image.load("images/gardenTestingScreenSize.png").convert()
-background_surf = pygame.transform.scale(
-    background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
-)
-# PLAYER = Player.image
-# PLAYER.set_colorkey((252, 252, 253),(0,0,95))
-
 class Hotbar:
     def __init__(self, player):
         self.player = player
+        self.hotbar_image = pygame.transform.scale(pygame.image.load("#Daniel's_room\Hotbar\Hotbar.png")(500,64))
 
-        hotbar_path = os.path.join("Daniel's Room","Hotbar","Hotbar.png")
-
-        print("Loading:", hotbar_path)
-
-        self.hotbar_image = pygame.image.load(hotbar_path).convert_alpha()
-
-        self.hotbar_rect = self.hotbar_image.get_rect(topleft= (10,0))
-
-# INVENTORY ITEM
-
-class InventoryItem:
-    def __init__(self, name, item_type, img):
+        self.hotbar_rect = self.hotbar_image.get_rect(center=((pygame.display.get_window_size()[0]/2, pygame.display.get_window_size()[1]-30)))
+        
+class inventory_item:
+    def __init__(self, name, description):
         self.name = name
         self.item_type = item_type
-        self.img = pygame.image.load(img).convert_alpha()
-
-# OVERLAY
-
+        self.img = pygame.image.load(img)
 class Overlay:
+    
     def __init__(self, player):
         self.player = player
         self.hotbar = Hotbar(player)
-
+        
     def display(self, surface):
-        surface.blit(self.hotbar.hotbar_image,self.hotbar.hotbar_rect)
+        surface.blit(self.hotbar.hotbar_image, self.hotbar.hotbar_rect)
+#images
+player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
+# PLAYER = Player.image
+# PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
 
 
@@ -83,7 +58,6 @@ running = True
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
-overlay = Overlay(player)
 
 while running:
 
@@ -92,15 +66,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-    all_sprites.update(dt)
-
-    # draw background image
-    display_surface.blit(background_surf, (0, 0))
-
-    all_sprites.draw(display_surface)
-    overlay.display(display_surface)
-    pygame.display.update()
+    self.overlay.display(display_surface)
     
-pygame.quit()
+    all_sprites.update(dt)
+    display_surface.fill("lightGreen")
+    all_sprites.draw(display_surface)
+    pygame.display.update()
 
+pygame.quit()
