@@ -11,11 +11,17 @@ fullscreen = False
 running = True
 
 #import
+background = pygame.image.load(join("images","redbackground.jpg")).convert_alpha()
 game_over = pygame.image.load(join("images", "game_over.png")).convert_alpha()
-game_over_rect = game_over.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+restart_button = pygame.image.load(join("images", "restart_button.png")).convert_alpha()
 
-restart_button = pygame.image.load(join("images", "resart_button.png")).convert_alpha()
-restart_button_rect = restart_button.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
+#Scale button
+restart_button = pygame.transform.smoothscale(restart_button, (250, 80))
+background = pygame.transform.smoothscale(background, WINDOW_SIZE)
+#centre iamges
+
+game_over_rect = game_over.get_rect(center=(640, 250))
+restart_button_rect = restart_button.get_rect(center=(640, 500))
 
 while running:
     for event in pygame.event.get():
@@ -25,17 +31,13 @@ while running:
             if event.key == pygame.K_F11:
                 fullscreen = not fullscreen
                 if fullscreen:
-                    screen = pygame.display.set_mode(
-                        (0, 0), pygame.FULLSCREEN
-                    )
+                    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                 else:
-                    screen = pygame.display.set_mode(
-                        WINDOW_SIZE
-                    )
+                    screen = pygame.display.set_mode(WINDOW_SIZE)
 
-    #Draw image
-    screen.fill("red") #background colour
-    #display image
+    
+    #Display images
+    screen.blit(background, (0, 0)) #background image
     screen.blit(game_over,game_over_rect)
     screen.blit(restart_button, restart_button_rect)    
     pygame.display.flip()
