@@ -30,6 +30,10 @@ class Player(pygame.sprite.Sprite):
 #images
 background_img = pygame.image.load("images/garden.png")
 player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
+# player_image_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png" for i in range (8))]
+# player_image_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png" for i in range (8))]
+# player_image_walk_left = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png" for i in range (8))]
+# player_image_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-4-{i} (1).png" for i in range (8))]
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
