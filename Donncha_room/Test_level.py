@@ -9,9 +9,12 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load('Donncha_room\sprites\sprite-1-1 (1).png').convert_alpha()
         self.rect = self.image.get_frect(center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
         self.direction = pygame.Vector2()
-        self.speed = 300
+        self.speed = 100
 
         self.heath =  3
+        self.walking = False
+        self.current_walk_index = 0
+        self.last_updated_walk_index = pygame.time.get_ticks()
 
         self.image = pygame.transform.scale_by(self.image, 1)
 
@@ -21,10 +24,31 @@ class Player(pygame.sprite.Sprite):
         keys= pygame.key.get_pressed()
         recent_keys = pygame.key.get_just_pressed()
 
-        self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
-        self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+        self.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
+        self.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
+        if int(keys[pygame.K_d]) - int(keys[pygame.K_a]) != 0 or int(keys[pygame.K_s]) - int(keys[pygame.K_w]) != 0:
+            self.walking = True
+
+        else:
+            self.walking = False
         self.direction = self.direction.normalize() if self.direction else self.direction
         self.rect.center += self.direction * self.speed * dt
+
+
+        if self.walking == True and int(keys[pygame.K_s]) == 1:
+            self.image = player_walk_forward[self.current_walk_index]
+
+        else:
+            self.current_walk_index = 0
+
+        self.update_walking_animation()
+
+    def update_walking_animation(self):
+
+        now = pygame.time.get_ticks()
+        if now - self.last_updated_walk_index > 250:
+            self.last_updated_walk_index = now
+            self.current_walk_index = (self.current_walk_index + 1) % len(player_walk_forward_right)
 
 
 #images
@@ -40,6 +64,14 @@ background_surf = pygame.image.load("images/gardenTestingScreenSize.png").conver
 background_surf = pygame.transform.scale(
     background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
+player_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png") for i in range (1,8)]
+player_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png") for i in range (1,8)]
+player_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png") for i in range (1,8)]
+player_walk_left = [pygame.image.load(f"Donncha_room\sprites\sprite-4-{i} (1).png") for i in range (1,8)]
+player_walk_forward_left = [pygame.image.load(f"Donncha_room\sprites\sprite-5-{i} (1).png") for i in range (1,8)]
+player_walk_forward_right = [pygame.image.load(f"Donncha_room\sprites\sprite-6-{i} (1).png") for i in range (1,8)]
+player_walk_back_left = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (2).png") for i in range (1,8)]
+player_walk_back_right = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (2).png") for i in range (1,8)]
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
@@ -94,7 +126,7 @@ while running:
             running = False
 
     all_sprites.update(dt)
-
+   # all_sprites.update_walking_animation()
     # draw background image
     display_surface.blit(background_surf, (0, 0))
 
