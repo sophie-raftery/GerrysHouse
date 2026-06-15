@@ -2,7 +2,7 @@ import pygame
 import random
 from os.path import join
 import os
-from hotbar import Hotbar, Overlay, InventoryItems
+from hotbar import Hotbar, Overlay, InventoryItem
 
 
 class Player(pygame.sprite.Sprite):
