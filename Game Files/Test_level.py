@@ -77,8 +77,10 @@ class Player(pygame.sprite.Sprite):
 background_img = pygame.image.load("images/garden.png")
 player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
 house_front = pygame.image.load("images/jarrys_house.png")
+#scaling the house image
 house_front = pygame.transform.scale(house_front, (450, 450))
 dog_house = pygame.image.load("images/dogHouse.png")
+#scaling the dog house image
 dog_house = pygame.transform.scale(dog_house, (150, 150))
 
 pygame.init()
@@ -182,4 +184,5 @@ while running:
     pygame.display.update()
     
 pygame.quit()
+
 
