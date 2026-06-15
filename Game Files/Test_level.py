@@ -20,7 +20,6 @@ class Player(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale_by(self.image, 1)
 
-
     def update(self, dt):
 
         keys= pygame.key.get_pressed()
@@ -72,6 +71,44 @@ class Player(pygame.sprite.Sprite):
         else:
             walk_sound.stop()
 
+#dog class
+class Dog(pygame.sprite.Sprite):
+    def __init__(self, groups, player):
+
+        super().__init__(groups)
+        self.image = dog_down
+        self.rect = self.image.get_rect(center=(1000, 420))
+        #self.player = player
+        #self.image = dog_down
+        #self.rect = self.image.get_rect(center=(900, 250))
+        #self.pos = pygame.Vector2(self.rect.center)
+        #self.speed = 110
+
+    def update(self, dt):
+        pass
+        #direction = pygame.Vector2(self.player.rect.centerx - self.rect.centerx, self.player.rect.centery - self.rect.centery)
+        #distance = direction.length()
+        #self.pos += direction * self.speed * dt
+        #self.rect.center = self.pos
+        
+        #the dog will chase the player if inside the detection radius
+        #DETECTION_RADIUS = 250
+        #if 0 < distance < DETECTION_RADIUS:
+        #    direction = direction.normalize()
+        #    self.pos += direction * self.speed * dt
+        #    self.rect.center = self.pos
+        
+        #if abs(direction.x) > abs(direction.y):
+        #    if direction.x > 0:
+        #        self.image = dog_right
+        #    else:
+        #        self.image = dog_left
+
+        #else:
+        #    if direction.y > 0:
+        #        self.image = dog_down
+        #    else:
+        #        self.image = dog_up
 
 #images
 background_img = pygame.image.load("images/garden.png")
@@ -102,8 +139,6 @@ player_walk_forward_left = [pygame.image.load(f"Donncha_room\sprites\sprite-6-{i
 #player_walk_back_left = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (2).png") for i in range (1,5)]
 #player_walk_back_right = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (2).png") for i in range (1,5)]
 
-
-
 #walking backwards
 player_walk_back_right1 = pygame.image.load("Donncha_room\sprites\sprite-1-1 (2).png")
 player_walk_back_left1 = pygame.image.load('Donncha_room\sprites\sprite-2-1 (2).png')
@@ -128,6 +163,18 @@ player_walk_back_left5 = pygame.transform.scale_by(player_walk_back_left5, 0.65)
 
 player_walk_back_right = [player_walk_back_left1,player_walk_back_left2,player_walk_back_left3,player_walk_back_left4,player_walk_back_left5]
 player_walk_back_left= [player_walk_back_right1,player_walk_back_right2,player_walk_back_right3,player_walk_back_right4,player_walk_back_right5]
+
+#dog sprite animation
+dog_down = pygame.image.load("images/dogSprite/dog-down.png").convert_alpha()
+dog_up = pygame.image.load("images/dogSprite/dog-up.png").convert_alpha()
+dog_left = pygame.image.load("images/dogSprite/dog-left.png").convert_alpha()
+dog_right = pygame.image.load("images/dogSprite/dog-right.png").convert_alpha()
+
+#down scaling the dog
+dog_down = pygame.transform.scale_by(dog_down, 0.15)
+dog_up = pygame.transform.scale_by(dog_up, 0.15)
+dog_left = pygame.transform.scale_by(dog_left, 0.15)
+dog_right = pygame.transform.scale_by(dog_right, 0.15)
 
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
@@ -156,6 +203,8 @@ running = True
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
+dog = Dog(all_sprites, player)
+
 overlay.display(display_surface)
 walk_sound = pygame.mixer.Sound(join("Daniel's Room","Audios", "Grass footsteps.wav"))
 walk_sound.set_volume(0.9)
@@ -177,10 +226,10 @@ while running:
     display_surface.blit(house_front, (850, 5))
     #draw the dog house
     display_surface.blit(dog_house, (100, 500))
-
     player.player_walk_sound()
     all_sprites.draw(display_surface)
     overlay.display(display_surface)
+
     pygame.display.update()
     
 pygame.quit()
