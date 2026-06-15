@@ -2,6 +2,8 @@ import pygame
 import random
 from os.path import join
 import os
+from hotbar import Hotbar, Overlay, InventoryItem
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
@@ -63,6 +65,12 @@ class Player(pygame.sprite.Sprite):
         if now - self.last_updated_walk_index > 200:
             self.last_updated_walk_index = now
             self.current_walk_index = (self.current_walk_index + 1) % len(player_walk_forward_right)
+    
+    def player_walk_sound(self):
+        if self.walking:
+            walk_sound.play()
+        else:
+            walk_sound.stop()
 
 
 #images
@@ -79,7 +87,6 @@ background_surf = pygame.transform.scale(
     background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
 
-#Lists
 player_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png") for i in range (1,5)]
 player_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png") for i in range (1,5)]
 player_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png") for i in range (1,5)]
@@ -119,38 +126,21 @@ player_walk_back_left= [player_walk_back_right1,player_walk_back_right2,player_w
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
+#Hotbar
+overlay = Overlay(Player)
 
-class Hotbar:
-    def __init__(self, player):
-        self.player = player
+shovel = InventoryItem("Shovel","Tool","images/items/Clean_Shovel.png")
+dirty_shovel = InventoryItem("Dirty_Shovel","Tool","images/items/Dirty_Shovel.png")
+dog_bone = InventoryItem("Dog_Bone","Quest Item","images/items/Dog_Bone.png")
+mj_vinyl = InventoryItem("MJ_Vinyl","Quest Item","images/items/Vinyl_white.png")
+billy_vinyl = InventoryItem("Billy_Vinyl","Quest Item","images/items/Vinyl_yellow.png")
+katie_vinyl = InventoryItem("Katie_Vinyl","Quest Item","images/items/Vinyl_red.png")
 
-        hotbar_path = os.path.join("Daniel's Room","Hotbar","Hotbar.png")
-
-        print("Loading:", hotbar_path)
-
-        self.hotbar_image = pygame.image.load(hotbar_path).convert_alpha()
-
-        self.hotbar_rect = self.hotbar_image.get_rect(topleft= (10,0))
-
-# INVENTORY ITEM
-
-class InventoryItem:
-    def __init__(self, name, item_type, img):
-        self.name = name
-        self.item_type = item_type
-        self.img = pygame.image.load(img).convert_alpha()
-
-# OVERLAY
-
-class Overlay:
-    def __init__(self, player):
-        self.player = player
-        self.hotbar = Hotbar(player)
-
-    def display(self, surface):
-        surface.blit(self.hotbar.hotbar_image,self.hotbar.hotbar_rect)
-
-
+overlay.hotbar.add_item(dirty_shovel, 0)
+overlay.hotbar.add_item(dog_bone, 1)
+overlay.hotbar.add_item(mj_vinyl, 2)
+overlay.hotbar.add_item(billy_vinyl, 3)
+overlay.hotbar.add_item(katie_vinyl, 4)
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT =   1280, 720
@@ -160,11 +150,14 @@ running = True
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
-overlay = Overlay(player)
+overlay.display(display_surface)
+walk_sound = pygame.mixer.Sound(join("Daniel's Room","Audios", "Grass footsteps.wav"))
+walk_sound.set_volume(0.9)
+
 
 while running:
-
     dt = clock.tick(100000)/1000
+
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -174,7 +167,7 @@ while running:
    # all_sprites.update_walking_animation()
     # draw background image
     display_surface.blit(background_surf, (0, 0))
-
+    player.player_walk_sound()
     all_sprites.draw(display_surface)
     overlay.display(display_surface)
     pygame.display.update()
