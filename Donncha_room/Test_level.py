@@ -35,8 +35,22 @@ class Player(pygame.sprite.Sprite):
         self.rect.center += self.direction * self.speed * dt
 
 
-        if self.walking == True and int(keys[pygame.K_s]) == 1:
+        if self.walking == True and int(keys[pygame.K_s]) == 1 and int(keys[pygame.K_d]) != 1 and int(keys[pygame.K_a]) != 1:
             self.image = player_walk_forward[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_w]) == 1 and int(keys[pygame.K_d]) != 1 and int(keys[pygame.K_a]) != 1:
+            self.image = player_walk_back[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_s]) == 1 and int(keys[pygame.K_d]) != 1 and int(keys[pygame.K_a]) == 1:
+            self.image = player_walk_forward_left[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_s]) == 1 and int(keys[pygame.K_d]) == 1 and int(keys[pygame.K_a]) != 1:
+            self.image = player_walk_forward_right[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_w]) == 1 and int(keys[pygame.K_d]) != 1 and int(keys[pygame.K_a]) == 1:
+            self.image = player_walk_back_left[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_w]) == 1 and int(keys[pygame.K_d]) == 1 and int(keys[pygame.K_a]) != 1:
+            self.image = player_walk_back_right[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_w]) != 1 and int(keys[pygame.K_d]) == 1 and int(keys[pygame.K_a]) != 1:
+            self.image = player_walk_right[self.current_walk_index]
+        elif self.walking == True and int(keys[pygame.K_w]) != 1 and int(keys[pygame.K_d]) != 1 and int(keys[pygame.K_a]) == 1:
+            self.image = player_walk_left[self.current_walk_index]
 
         else:
             self.current_walk_index = 0
@@ -46,7 +60,7 @@ class Player(pygame.sprite.Sprite):
     def update_walking_animation(self):
 
         now = pygame.time.get_ticks()
-        if now - self.last_updated_walk_index > 250:
+        if now - self.last_updated_walk_index > 200:
             self.last_updated_walk_index = now
             self.current_walk_index = (self.current_walk_index + 1) % len(player_walk_forward_right)
 
@@ -64,16 +78,47 @@ background_surf = pygame.image.load("images/gardenTestingScreenSize.png").conver
 background_surf = pygame.transform.scale(
     background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
-player_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png") for i in range (1,8)]
-player_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png") for i in range (1,8)]
-player_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png") for i in range (1,8)]
-player_walk_left = [pygame.image.load(f"Donncha_room\sprites\sprite-4-{i} (1).png") for i in range (1,8)]
-player_walk_forward_left = [pygame.image.load(f"Donncha_room\sprites\sprite-5-{i} (1).png") for i in range (1,8)]
-player_walk_forward_right = [pygame.image.load(f"Donncha_room\sprites\sprite-6-{i} (1).png") for i in range (1,8)]
-player_walk_back_left = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (2).png") for i in range (1,8)]
-player_walk_back_right = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (2).png") for i in range (1,8)]
+
+#Lists
+player_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png") for i in range (1,5)]
+player_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png") for i in range (1,5)]
+player_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png") for i in range (1,5)]
+player_walk_left = [pygame.image.load(f"Donncha_room\sprites\sprite-4-{i} (1).png") for i in range (1,5)]
+player_walk_forward_right = [pygame.image.load(f"Donncha_room\sprites\sprite-5-{i} (1).png") for i in range (1,5)]
+player_walk_forward_left = [pygame.image.load(f"Donncha_room\sprites\sprite-6-{i} (1).png") for i in range (1,5)]
+#player_walk_back_left = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (2).png") for i in range (1,5)]
+#player_walk_back_right = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (2).png") for i in range (1,5)]
+
+
+
+#walking backwards
+player_walk_back_right1 = pygame.image.load("Donncha_room\sprites\sprite-1-1 (2).png")
+player_walk_back_left1 = pygame.image.load('Donncha_room\sprites\sprite-2-1 (2).png')
+player_walk_back_right1 = pygame.transform.scale_by(player_walk_back_right1, 0.65)
+player_walk_back_left1 = pygame.transform.scale_by(player_walk_back_left1, 0.65)
+player_walk_back_right2 = pygame.image.load("Donncha_room\sprites\sprite-1-2 (2).png")
+player_walk_back_left2 = pygame.image.load('Donncha_room\sprites\sprite-2-2 (2).png')
+player_walk_back_right2 = pygame.transform.scale_by(player_walk_back_right2, 0.65)
+player_walk_back_left2 = pygame.transform.scale_by(player_walk_back_left2, 0.65)
+player_walk_back_right3 = pygame.image.load("Donncha_room\sprites\sprite-1-3 (2).png")
+player_walk_back_left3 = pygame.image.load('Donncha_room\sprites\sprite-2-3 (2).png')
+player_walk_back_right3 = pygame.transform.scale_by(player_walk_back_right3, 0.65)
+player_walk_back_left3 = pygame.transform.scale_by(player_walk_back_left3, 0.65)
+player_walk_back_right4 = pygame.image.load("Donncha_room\sprites\sprite-1-4 (2).png")
+player_walk_back_left4 = pygame.image.load('Donncha_room\sprites\sprite-2-4 (2).png')
+player_walk_back_right4 = pygame.transform.scale_by(player_walk_back_right4, 0.65)
+player_walk_back_left4 = pygame.transform.scale_by(player_walk_back_left4, 0.65)
+player_walk_back_right5 = pygame.image.load("Donncha_room\sprites\sprite-1-5 (2).png")
+player_walk_back_left5 = pygame.image.load('Donncha_room\sprites\sprite-2-5 (2).png')
+player_walk_back_right5 = pygame.transform.scale_by(player_walk_back_right5, 0.65)
+player_walk_back_left5 = pygame.transform.scale_by(player_walk_back_left5, 0.65)
+
+player_walk_back_right = [player_walk_back_left1,player_walk_back_left2,player_walk_back_left3,player_walk_back_left4,player_walk_back_left5]
+player_walk_back_left= [player_walk_back_right1,player_walk_back_right2,player_walk_back_right3,player_walk_back_right4,player_walk_back_right5]
+
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
+
 
 class Hotbar:
     def __init__(self, player):
