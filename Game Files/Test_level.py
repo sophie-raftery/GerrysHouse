@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
         if int(keys[pygame.K_d]) - int(keys[pygame.K_a]) != 0 or int(keys[pygame.K_s]) - int(keys[pygame.K_w]) != 0:
             self.walking = True
-            
+
         else:
             self.walking = False
         self.direction = self.direction.normalize() if self.direction else self.direction
@@ -65,6 +65,12 @@ class Player(pygame.sprite.Sprite):
         if now - self.last_updated_walk_index > 200:
             self.last_updated_walk_index = now
             self.current_walk_index = (self.current_walk_index + 1) % len(player_walk_forward_right)
+    
+    def player_walk_sound(self):
+        if self.walking:
+            walk_sound.play()
+        else:
+            walk_sound.stop()
 
 
 #images
@@ -145,12 +151,13 @@ clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
 overlay.display(display_surface)
-
 walk_sound = pygame.mixer.Sound(join("Daniel's Room","Audios", "Grass footsteps.wav"))
 walk_sound.set_volume(0.9)
 
+
 while running:
     dt = clock.tick(100000)/1000
+
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -160,7 +167,7 @@ while running:
    # all_sprites.update_walking_animation()
     # draw background image
     display_surface.blit(background_surf, (0, 0))
-
+    player.player_walk_sound()
     all_sprites.draw(display_surface)
     overlay.display(display_surface)
     pygame.display.update()
