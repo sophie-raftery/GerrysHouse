@@ -18,8 +18,8 @@ restart_button = pygame.image.load(join("images", "restart_button.png")).convert
 #Scale button
 restart_button = pygame.transform.smoothscale(restart_button, (250, 80))
 background = pygame.transform.smoothscale(background, WINDOW_SIZE)
-#centre iamges
 
+#centre images
 game_over_rect = game_over.get_rect(center=(640, 250))
 restart_button_rect = restart_button.get_rect(center=(640, 500))
 
