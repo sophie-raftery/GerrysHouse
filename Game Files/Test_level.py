@@ -2,6 +2,8 @@ import pygame
 import random
 from os.path import join
 import os
+from hotbar import Hotbar, Overlay, InventoryItems
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
@@ -119,38 +121,19 @@ player_walk_back_left= [player_walk_back_right1,player_walk_back_right2,player_w
 # PLAYER = Player.image
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
+#Hotbar
+shovel = InventoryItem("Shovel","Tool","Daniel's Room/items/Clean_Shovel.png")
+dirty_shovel = InventoryItem("Dirty_Shovel","Tool","Daniel's Room/items/Dirty_Shovel.png")
+dog_bone = InventoryItem("Dog_Bone","Quest Item","Daniel's Room/items/Dog_Bone.png")
+mj_vinyl = InventoryItem("MJ_Vinyl","Quest Item","Daniel's Room/items/Vinyl_white.png")
+billy_vinyl = InventoryItem("Billy_Vinyl","Quest Item","Daniel's Room/items/Vinyl_yellow.png")
+katie_vinyl = InventoryItem("Katie_Vinyl","Quest Item","Daniel's Room/items/Vinyl_red.png")
 
-class Hotbar:
-    def __init__(self, player):
-        self.player = player
-
-        hotbar_path = os.path.join("Daniel's Room","Hotbar","Hotbar.png")
-
-        print("Loading:", hotbar_path)
-
-        self.hotbar_image = pygame.image.load(hotbar_path).convert_alpha()
-
-        self.hotbar_rect = self.hotbar_image.get_rect(topleft= (10,0))
-
-# INVENTORY ITEM
-
-class InventoryItem:
-    def __init__(self, name, item_type, img):
-        self.name = name
-        self.item_type = item_type
-        self.img = pygame.image.load(img).convert_alpha()
-
-# OVERLAY
-
-class Overlay:
-    def __init__(self, player):
-        self.player = player
-        self.hotbar = Hotbar(player)
-
-    def display(self, surface):
-        surface.blit(self.hotbar.hotbar_image,self.hotbar.hotbar_rect)
-
-
+overlay.hotbar.add_item(dirty_shovel, 1)
+overlay.hotbar.add_item(dog_bone, 2)
+overlay.hotbar.add_item(mj_vinyl, 3)
+overlay.hotbar.add_item(billy_vinyl, 4)
+overlay.hotbar.add_item(katie_vinyl, 0)
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT =   1280, 720
