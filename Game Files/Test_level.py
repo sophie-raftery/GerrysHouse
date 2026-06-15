@@ -76,13 +76,17 @@ class Player(pygame.sprite.Sprite):
 #images
 background_img = pygame.image.load("images/garden.png")
 player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
+house_front = pygame.image.load("images/jarrys_house.png")
+house_front = pygame.transform.scale(house_front, (450, 450))
+dog_house = pygame.image.load("images/dogHouse.png")
+dog_house = pygame.transform.scale(dog_house, (150, 150))
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
 #background image scaled to fit window - sophie
-background_surf = pygame.image.load("images/gardenTestingScreenSize.png").convert()
+background_surf = pygame.image.load("images/garden.png").convert()
 background_surf = pygame.transform.scale(
     background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
@@ -164,9 +168,14 @@ while running:
             running = False
 
     all_sprites.update(dt)
-   # all_sprites.update_walking_animation()
+    # all_sprites.update_walking_animation()
     # draw background image
     display_surface.blit(background_surf, (0, 0))
+    #draw the house
+    display_surface.blit(house_front, (850, 5))
+    #draw the dog house
+    display_surface.blit(dog_house, (100, 500))
+
     player.player_walk_sound()
     all_sprites.draw(display_surface)
     overlay.display(display_surface)
