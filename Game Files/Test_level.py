@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
         if int(keys[pygame.K_d]) - int(keys[pygame.K_a]) != 0 or int(keys[pygame.K_s]) - int(keys[pygame.K_w]) != 0:
             self.walking = True
-
+            
         else:
             self.walking = False
         self.direction = self.direction.normalize() if self.direction else self.direction
@@ -81,7 +81,6 @@ background_surf = pygame.transform.scale(
     background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
 
-#Lists
 player_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png") for i in range (1,5)]
 player_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png") for i in range (1,5)]
 player_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png") for i in range (1,5)]
@@ -131,11 +130,11 @@ mj_vinyl = InventoryItem("MJ_Vinyl","Quest Item","images/items/Vinyl_white.png")
 billy_vinyl = InventoryItem("Billy_Vinyl","Quest Item","images/items/Vinyl_yellow.png")
 katie_vinyl = InventoryItem("Katie_Vinyl","Quest Item","images/items/Vinyl_red.png")
 
-overlay.hotbar.add_item(dirty_shovel, 1)
-overlay.hotbar.add_item(dog_bone, 2)
-overlay.hotbar.add_item(mj_vinyl, 3)
-overlay.hotbar.add_item(billy_vinyl, 4)
-overlay.hotbar.add_item(katie_vinyl, 0)
+overlay.hotbar.add_item(dirty_shovel, 0)
+overlay.hotbar.add_item(dog_bone, 1)
+overlay.hotbar.add_item(mj_vinyl, 2)
+overlay.hotbar.add_item(billy_vinyl, 3)
+overlay.hotbar.add_item(katie_vinyl, 4)
 
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT =   1280, 720
@@ -147,9 +146,10 @@ all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
 overlay.display(display_surface)
 
+walk_sound = pygame.mixer.Sound(join("Daniel's Room","Audios", "Grass footsteps.wav"))
+walk_sound.set_volume(0.9)
 
 while running:
-
     dt = clock.tick(100000)/1000
 
     for event in pygame.event.get():

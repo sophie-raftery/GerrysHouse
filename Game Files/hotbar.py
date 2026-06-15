@@ -1,3 +1,5 @@
+import pygame
+import os
 class InventoryItem:
     def __init__(self, name, item_type, img_path):
         self.name = name
