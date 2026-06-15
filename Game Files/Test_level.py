@@ -122,12 +122,14 @@ player_walk_back_left= [player_walk_back_right1,player_walk_back_right2,player_w
 # PLAYER.set_colorkey((252, 252, 253),(0,0,95))
 
 #Hotbar
-shovel = InventoryItem("Shovel","Tool","Daniel's Room/items/Clean_Shovel.png")
-dirty_shovel = InventoryItem("Dirty_Shovel","Tool","Daniel's Room/items/Dirty_Shovel.png")
-dog_bone = InventoryItem("Dog_Bone","Quest Item","Daniel's Room/items/Dog_Bone.png")
-mj_vinyl = InventoryItem("MJ_Vinyl","Quest Item","Daniel's Room/items/Vinyl_white.png")
-billy_vinyl = InventoryItem("Billy_Vinyl","Quest Item","Daniel's Room/items/Vinyl_yellow.png")
-katie_vinyl = InventoryItem("Katie_Vinyl","Quest Item","Daniel's Room/items/Vinyl_red.png")
+overlay = Overlay(Player)
+
+shovel = InventoryItem("Shovel","Tool","images/items/Clean_Shovel.png")
+dirty_shovel = InventoryItem("Dirty_Shovel","Tool","images/items/Dirty_Shovel.png")
+dog_bone = InventoryItem("Dog_Bone","Quest Item","images/items/Dog_Bone.png")
+mj_vinyl = InventoryItem("MJ_Vinyl","Quest Item","images/items/Vinyl_white.png")
+billy_vinyl = InventoryItem("Billy_Vinyl","Quest Item","images/items/Vinyl_yellow.png")
+katie_vinyl = InventoryItem("Katie_Vinyl","Quest Item","images/items/Vinyl_red.png")
 
 overlay.hotbar.add_item(dirty_shovel, 1)
 overlay.hotbar.add_item(dog_bone, 2)
@@ -143,7 +145,8 @@ running = True
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
-overlay = Overlay(player)
+overlay.display(display_surface)
+
 
 while running:
 

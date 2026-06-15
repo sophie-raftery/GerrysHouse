@@ -1,18 +1,9 @@
-import pygame
-import os
-# INVENTORY ITEM
-
 class InventoryItem:
     def __init__(self, name, item_type, img_path):
         self.name = name
         self.item_type = item_type
 
-        self.img = pygame.image.load(
-            img_path
-        ).convert_alpha()
-
-# HOTBAR
-
+        self.img = pygame.image.load(img_path).convert_alpha()
 class Hotbar:
     def __init__(self, player):
         self.player = player
@@ -80,8 +71,6 @@ class Hotbar:
                 #     (x, y),
                 #     3
                 # )
-
-# OVERLAY
 class Overlay:
     def __init__(self, player):
         self.player = player
@@ -89,4 +78,3 @@ class Overlay:
 
     def display(self, surface):
         self.hotbar.draw(surface)
-
