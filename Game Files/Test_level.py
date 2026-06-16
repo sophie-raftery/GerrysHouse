@@ -8,7 +8,7 @@ from hotbar import Hotbar, Overlay, InventoryItem
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
-        self.image = pygame.image.load('Donncha_room\sprites\sprite-1-1 (1).png').convert_alpha()
+        self.image = pygame.image.load('images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
         self.rect = self.image.get_frect(center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
         self.direction = pygame.Vector2()
         self.speed = 100
@@ -112,7 +112,7 @@ class Dog(pygame.sprite.Sprite):
 
 #images
 background_img = pygame.image.load("images/garden.png")
-player_surf = pygame.image.load("Donncha_room\sprites\sprite-1-1 (1).png")
+player_surf = pygame.image.load("images\Player_sprites\sprite-1-1 (1).png")
 house_front = pygame.image.load("images/jarrys_house.png")
 #scaling the house image
 house_front = pygame.transform.scale(house_front, (450, 450))
@@ -130,34 +130,34 @@ background_surf = pygame.transform.scale(
     background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
 
-player_walk_forward = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (1).png") for i in range (1,5)]
-player_walk_back = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (1).png") for i in range (1,5)]
-player_walk_right = [pygame.image.load(f"Donncha_room\sprites\sprite-3-{i} (1).png") for i in range (1,5)]
-player_walk_left = [pygame.image.load(f"Donncha_room\sprites\sprite-4-{i} (1).png") for i in range (1,5)]
-player_walk_forward_right = [pygame.image.load(f"Donncha_room\sprites\sprite-5-{i} (1).png") for i in range (1,5)]
-player_walk_forward_left = [pygame.image.load(f"Donncha_room\sprites\sprite-6-{i} (1).png") for i in range (1,5)]
-#player_walk_back_left = [pygame.image.load(f"Donncha_room\sprites\sprite-1-{i} (2).png") for i in range (1,5)]
-#player_walk_back_right = [pygame.image.load(f"Donncha_room\sprites\sprite-2-{i} (2).png") for i in range (1,5)]
+player_walk_forward = [pygame.image.load(f"images\Player_sprites\sprite-1-{i} (1).png") for i in range (1,5)]
+player_walk_back = [pygame.image.load(f"images\Player_sprites\sprite-2-{i} (1).png") for i in range (1,5)]
+player_walk_right = [pygame.image.load(f"images\Player_sprites\sprite-3-{i} (1).png") for i in range (1,5)]
+player_walk_left = [pygame.image.load(f"images\Player_sprites\sprite-4-{i} (1).png") for i in range (1,5)]
+player_walk_forward_right = [pygame.image.load(f"images\Player_sprites\sprite-5-{i} (1).png") for i in range (1,5)]
+player_walk_forward_left = [pygame.image.load(f"images\Player_sprites\sprite-6-{i} (1).png") for i in range (1,5)]
+#player_walk_back_left = [pygame.image.load(f"images\Player_sprites\sprite-1-{i} (2).png") for i in range (1,5)]
+#player_walk_back_right = [pygame.image.load(f"images\Player_sprites\sprite-2-{i} (2).png") for i in range (1,5)]
 
 #walking backwards
-player_walk_back_right1 = pygame.image.load("Donncha_room\sprites\sprite-1-1 (2).png")
-player_walk_back_left1 = pygame.image.load('Donncha_room\sprites\sprite-2-1 (2).png')
+player_walk_back_right1 = pygame.image.load("images\Player_sprites\sprite-1-1 (2).png")
+player_walk_back_left1 = pygame.image.load('images\Player_sprites\sprite-2-1 (2).png')
 player_walk_back_right1 = pygame.transform.scale_by(player_walk_back_right1, 0.65)
 player_walk_back_left1 = pygame.transform.scale_by(player_walk_back_left1, 0.65)
-player_walk_back_right2 = pygame.image.load("Donncha_room\sprites\sprite-1-2 (2).png")
-player_walk_back_left2 = pygame.image.load('Donncha_room\sprites\sprite-2-2 (2).png')
+player_walk_back_right2 = pygame.image.load("images\Player_sprites\sprite-1-2 (2).png")
+player_walk_back_left2 = pygame.image.load('images\Player_sprites\sprite-2-2 (2).png')
 player_walk_back_right2 = pygame.transform.scale_by(player_walk_back_right2, 0.65)
 player_walk_back_left2 = pygame.transform.scale_by(player_walk_back_left2, 0.65)
-player_walk_back_right3 = pygame.image.load("Donncha_room\sprites\sprite-1-3 (2).png")
-player_walk_back_left3 = pygame.image.load('Donncha_room\sprites\sprite-2-3 (2).png')
+player_walk_back_right3 = pygame.image.load("images\Player_sprites\sprite-1-3 (2).png")
+player_walk_back_left3 = pygame.image.load('images\Player_sprites\sprite-2-3 (2).png')
 player_walk_back_right3 = pygame.transform.scale_by(player_walk_back_right3, 0.65)
 player_walk_back_left3 = pygame.transform.scale_by(player_walk_back_left3, 0.65)
-player_walk_back_right4 = pygame.image.load("Donncha_room\sprites\sprite-1-4 (2).png")
-player_walk_back_left4 = pygame.image.load('Donncha_room\sprites\sprite-2-4 (2).png')
+player_walk_back_right4 = pygame.image.load("images\Player_sprites\sprite-1-4 (2).png")
+player_walk_back_left4 = pygame.image.load('images\Player_sprites\sprite-2-4 (2).png')
 player_walk_back_right4 = pygame.transform.scale_by(player_walk_back_right4, 0.65)
 player_walk_back_left4 = pygame.transform.scale_by(player_walk_back_left4, 0.65)
-player_walk_back_right5 = pygame.image.load("Donncha_room\sprites\sprite-1-5 (2).png")
-player_walk_back_left5 = pygame.image.load('Donncha_room\sprites\sprite-2-5 (2).png')
+player_walk_back_right5 = pygame.image.load("images\Player_sprites\sprite-1-5 (2).png")
+player_walk_back_left5 = pygame.image.load('images\Player_sprites\sprite-2-5 (2).png')
 player_walk_back_right5 = pygame.transform.scale_by(player_walk_back_right5, 0.65)
 player_walk_back_left5 = pygame.transform.scale_by(player_walk_back_left5, 0.65)
 
