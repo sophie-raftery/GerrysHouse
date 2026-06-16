@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Level 1: The Bedroom — Search Jarry's bedroom for clues about Patrick's disappearance." />
+  <title>Level 1: The Bedroom — Jarry's House</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    /* Level 1 specific — blue theme */
+    .level-header { border-bottom-color: var(--accent-blue); }
+    .level-badge  { color: var(--accent-blue); border-color: var(--accent-blue); }
+    .level-title  { color: var(--accent-blue); }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar__inner">
+      <a href="./index.html" class="navbar__logo" aria-label="Jarry's House Home">🏠 JARRY'S HOUSE</a>
+      <button class="navbar__hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="navbar__links" id="nav-links" role="list">
+        <li><a href="./index.html">HOME</a></li>
+        <li><a href="./about.html">ABOUT US</a></li>
+        <li><a href="./level1.html">LEVEL 1</a></li>
+        <li><a href="./level2.html">LEVEL 2</a></li>
+        <li><a href="./level3.html">LEVEL 3</a></li>
+        <li><a href="./final-level.html">FINAL LEVEL</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- LEVEL HEADER -->
+    <header class="level-header pixel-bg" data-stars="25" aria-labelledby="level1-title">
+      <div class="container text-center">
+        <span class="level-badge" aria-label="Level 1">LEVEL 1</span>
+        <h1 class="level-title" id="level1-title">THE BEDROOM</h1>
+        <span class="level-icon" aria-hidden="true">🛏️</span>
+      </div>
+    </header>
+
+    <!-- MAIN LEVEL CONTENT -->
+    <section class="dark-section" style="padding-bottom: 4rem;">
+      <div class="container">
+        <div class="level-main reveal">
+
+          <!-- LEFT: Mission Brief -->
+          <div>
+            <div class="mission-brief-panel" aria-labelledby="brief1-heading">
+              <h2 class="panel-heading panel-heading--blue" id="brief1-heading">📋 MISSION BRIEF</h2>
+              <p>
+                Your investigation begins in Jarry's bedroom — the most personal space in the house. Patrick,
+                Jarry's family fish, has vanished under mysterious circumstances, and this room holds the
+                first fragments of the truth.
+              </p>
+              <p>
+                Sneak through the bedroom without waking Jarry. Search the drawers, check under the bed, and
+                look behind the wardrobe. There's something hidden here that Jarry doesn't want anyone to find —
+                and it's your job to find it first.
+              </p>
+              <p>
+                Watch out for creaky floorboards. Jarry has a habit of waking up at the slightest sound.
+                Keep your movements quiet, your eyes sharp, and leave no stone unturned.
+              </p>
+            </div>
+
+            <!-- MAP PLACEHOLDER -->
+            <div class="mt-2" aria-labelledby="map1-heading">
+              <h2 class="panel-heading panel-heading--blue" id="map1-heading" style="font-family:'Press Start 2P',monospace;font-size:0.65rem;color:var(--accent-blue);margin-bottom:1rem;">🗺️ LEVEL MAP</h2>
+              <!-- PLACEHOLDER: Replace with actual level 1 map screenshot -->
+              <div class="placeholder-box placeholder-box--map" aria-label="Level 1 map placeholder">
+                <span class="placeholder-box__icon" aria-hidden="true">🗺️</span>
+                <p class="placeholder-box__label">
+                  [ LEVEL 1 MAP SCREENSHOT ]<br/>
+                  <!-- PLACEHOLDER: Add bedroom map image here -->
+                  Add bedroom layout / map image here
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Objectives + Tips + Dev Notes -->
+          <div>
+
+            <!-- Objectives -->
+            <div class="mission-brief-panel mb-2" aria-labelledby="obj1-heading">
+              <h2 class="panel-heading panel-heading--blue" id="obj1-heading">🎯 OBJECTIVES</h2>
+              <ul class="objective-list" aria-label="Level 1 objectives">
+                <li>Enter the bedroom without being detected by Jarry</li>
+                <li>Search Jarry's bedside drawers for clues</li>
+                <li>Check under the bed for hidden items</li>
+                <li>Examine the wardrobe for anything suspicious</li>
+                <li>Find and collect the first evidence item</li>
+                <li>Exit the bedroom before Jarry wakes up</li>
+                <!-- PLACEHOLDER: Add more objectives specific to your game design -->
+              </ul>
+            </div>
+
+            <!-- Tips Dialogue Box -->
+            <div class="tip-box mb-2" aria-labelledby="tips1-heading">
+              <h2 class="panel-heading" id="tips1-heading" style="font-family:'Press Start 2P',monospace;font-size:0.6rem;color:var(--accent-purple);margin-bottom:1rem;">💡 TIPS &amp; TRICKS</h2>
+              <ul aria-label="Level 1 tips">
+                <li>Move slowly near the bed — Jarry is a light sleeper</li>
+                <li>The drawers on the left side of the room are the most important</li>
+                <li>Look for anything that seems out of place or glowing</li>
+                <li>If Jarry stirs, crouch and wait until he settles back down</li>
+                <li>You can hide behind the wardrobe if Jarry gets up</li>
+                <!-- PLACEHOLDER: Add tips specific to your level mechanics -->
+              </ul>
+            </div>
+
+            <!-- Dev Notes -->
+            <div class="dev-notes" aria-labelledby="dev1-heading">
+              <h2 class="dev-notes__label" id="dev1-heading">📝 DEV NOTES</h2>
+              <!-- PLACEHOLDER: Replace with actual developer commentary -->
+              <p>[DEVELOPER NOTES HERE — Add behind-the-scenes commentary, technical notes, design decisions, or fun facts about Level 1 here.]</p>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME EMBED -->
+    <section class="panel-section" aria-labelledby="play1-heading">
+      <div class="container">
+        <h2 class="section-title" id="play1-heading">🎮 PLAY THE LEVEL</h2>
+        <!-- PLACEHOLDER: Drop your Pygbag/WebAssembly build here -->
+        <div class="placeholder-box placeholder-box--embed" aria-label="Game embed placeholder">
+          <span class="placeholder-box__icon" aria-hidden="true">🐍</span>
+          <p class="placeholder-box__label">
+            [ PYTHON GAME EMBED HERE ]<br/><br/>
+            Drop your Python / Pygame web build here<br/>
+            <!-- PLACEHOLDER: Add iframe or canvas element for Pygbag/WASM embed -->
+            &lt;iframe src="your-build/index.html"&gt;&lt;/iframe&gt;
+          </p>
+          <small style="color:var(--text-muted);font-size:0.75rem;margin-top:0.5rem;">
+            Powered by Pygbag / WebAssembly
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEVEL NAVIGATION -->
+    <section class="dark-section" style="padding: 3rem 0;">
+      <div class="container">
+        <nav class="level-nav" aria-label="Level navigation">
+          <a href="./index.html" class="btn-pixel btn-pixel--blue" aria-label="Back to home">◀ BACK TO HOME</a>
+          <a href="./level2.html" class="btn-pixel btn-pixel--green" aria-label="Go to Level 2: The Kitchen">LEVEL 2: THE KITCHEN ▶</a>
+        </nav>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer__content">
+      <div class="footer__logo">🏠 JARRY'S HOUSE</div>
+      <nav class="footer__links" aria-label="Footer navigation">
+        <a href="#" aria-label="Twitter/X">🐦 TWITTER</a>
+        <a href="#" aria-label="GitHub">💻 GITHUB</a>
+        <a href="#" aria-label="itch.io">🎮 ITCH.IO</a>
+        <a href="#" aria-label="Discord">💬 DISCORD</a>
+      </nav>
+      <span class="footer__fish" aria-label="Patrick the fish">🐟</span>
+      <p class="footer__copy">
+        © <span class="js-year"></span> Jarry's House Development Team |
+        <!-- PLACEHOLDER: Replace with your university name -->
+        [UNIVERSITY PLACEHOLDER]
+      </p>
+      <p class="footer__built">Built with ❤️ and pixels</p>
+    </div>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Meet the team behind Jarry's House — the indie developers who built the stealth mystery game." />
+  <title>👥 About Us — Jarry's House</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ============================================
+       NAVIGATION
+       ============================================ -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar__inner">
+      <a href="./index.html" class="navbar__logo" aria-label="Jarry's House Home">🏠 JARRY'S HOUSE</a>
+      <button class="navbar__hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="navbar__links" id="nav-links" role="list">
+        <li><a href="./index.html">HOME</a></li>
+        <li><a href="./about.html">ABOUT US</a></li>
+        <li><a href="./level1.html">LEVEL 1</a></li>
+        <li><a href="./level2.html">LEVEL 2</a></li>
+        <li><a href="./level3.html">LEVEL 3</a></li>
+        <li><a href="./final-level.html">FINAL LEVEL</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ============================================
+         PAGE HERO
+         ============================================ -->
+    <header class="page-hero pixel-bg" data-stars="30" aria-labelledby="about-title">
+      <h1 class="page-hero__title" id="about-title">👥 MEET THE TEAM</h1>
+      <p class="page-hero__subtitle">The developers behind Jarry's House</p>
+    </header>
+
+    <!-- ============================================
+         TEAM SECTION
+         ============================================ -->
+    <section class="dark-section" aria-labelledby="team-heading">
+      <div class="container">
+        <h2 class="section-title" id="team-heading">⚔️ PARTY MEMBERS</h2>
+        <p class="section-subtitle">Select a character to view their stats</p>
+
+        <div class="team-grid reveal-children">
+
+          <!-- ===== TEAM MEMBER 1 ===== -->
+          <!-- PLACEHOLDER: Replace with actual team member info -->
+          <article class="team-card" aria-label="Team member 1">
+            <div class="team-card__avatar" aria-hidden="true">
+              <!-- PLACEHOLDER: Replace emoji with actual avatar image -->
+              🧑‍💻
+            </div>
+            <div class="team-card__body">
+              <!-- PLACEHOLDER: Replace [TEAM MEMBER NAME] with actual name -->
+              <h3 class="team-card__name">[TEAM MEMBER NAME]</h3>
+              <span class="role-badge role-badge--programmer">PROGRAMMER</span>
+
+              <!-- RPG Stat Bars -->
+              <div class="team-stats" aria-label="Team member stats">
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CODE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="80%"></div>
+                  </div>
+                  <span class="stat-bar-val">80</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">DESIGN</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="60%"></div>
+                  </div>
+                  <span class="stat-bar-val">60</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CREATIVE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="70%"></div>
+                  </div>
+                  <span class="stat-bar-val">70</span>
+                </div>
+              </div>
+
+              <!-- PLACEHOLDER: Replace with actual bio -->
+              <p class="team-card__bio">
+                [BIO PLACEHOLDER — Add team member biography here. Describe their role, skills, and what they contributed to Jarry's House.]
+              </p>
+
+              <!-- PLACEHOLDER: Replace # with actual social links -->
+              <div class="team-card__socials" aria-label="Social links">
+                <a href="#" aria-label="GitHub profile">💻 GITHUB</a>
+                <a href="#" aria-label="LinkedIn profile">💼 LINKEDIN</a>
+                <a href="#" aria-label="Twitter profile">🐦 TWITTER</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- ===== TEAM MEMBER 2 ===== -->
+          <!-- PLACEHOLDER: Replace with actual team member info -->
+          <article class="team-card" aria-label="Team member 2">
+            <div class="team-card__avatar" style="background: linear-gradient(135deg, #0f3460, #1a0a2e);" aria-hidden="true">
+              <!-- PLACEHOLDER: Replace emoji with actual avatar image -->
+              🎨
+            </div>
+            <div class="team-card__body">
+              <!-- PLACEHOLDER: Replace [TEAM MEMBER NAME] with actual name -->
+              <h3 class="team-card__name">[TEAM MEMBER NAME]</h3>
+              <span class="role-badge role-badge--artist">ARTIST</span>
+
+              <div class="team-stats" aria-label="Team member stats">
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CODE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="50%"></div>
+                  </div>
+                  <span class="stat-bar-val">50</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">DESIGN</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="90%"></div>
+                  </div>
+                  <span class="stat-bar-val">90</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CREATIVE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="95%"></div>
+                  </div>
+                  <span class="stat-bar-val">95</span>
+                </div>
+              </div>
+
+              <p class="team-card__bio">
+                [BIO PLACEHOLDER — Add team member biography here. Describe their role, skills, and what they contributed to Jarry's House.]
+              </p>
+
+              <div class="team-card__socials" aria-label="Social links">
+                <a href="#" aria-label="GitHub profile">💻 GITHUB</a>
+                <a href="#" aria-label="LinkedIn profile">💼 LINKEDIN</a>
+                <a href="#" aria-label="Twitter profile">🐦 TWITTER</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- ===== TEAM MEMBER 3 ===== -->
+          <!-- PLACEHOLDER: Replace with actual team member info -->
+          <article class="team-card" aria-label="Team member 3">
+            <div class="team-card__avatar" style="background: linear-gradient(135deg, #003d2b, #0f3460);" aria-hidden="true">
+              🕹️
+            </div>
+            <div class="team-card__body">
+              <h3 class="team-card__name">[TEAM MEMBER NAME]</h3>
+              <span class="role-badge role-badge--level-designer">LEVEL DESIGNER</span>
+
+              <div class="team-stats" aria-label="Team member stats">
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CODE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="65%"></div>
+                  </div>
+                  <span class="stat-bar-val">65</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">DESIGN</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="85%"></div>
+                  </div>
+                  <span class="stat-bar-val">85</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CREATIVE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="80%"></div>
+                  </div>
+                  <span class="stat-bar-val">80</span>
+                </div>
+              </div>
+
+              <p class="team-card__bio">
+                [BIO PLACEHOLDER — Add team member biography here. Describe their role, skills, and what they contributed to Jarry's House.]
+              </p>
+
+              <div class="team-card__socials" aria-label="Social links">
+                <a href="#" aria-label="GitHub profile">💻 GITHUB</a>
+                <a href="#" aria-label="LinkedIn profile">💼 LINKEDIN</a>
+                <a href="#" aria-label="Twitter profile">🐦 TWITTER</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- ===== TEAM MEMBER 4 ===== -->
+          <!-- PLACEHOLDER: Replace with actual team member info -->
+          <article class="team-card" aria-label="Team member 4">
+            <div class="team-card__avatar" style="background: linear-gradient(135deg, #2d0a2e, #0f3460);" aria-hidden="true">
+              🎭
+            </div>
+            <div class="team-card__body">
+              <h3 class="team-card__name">[TEAM MEMBER NAME]</h3>
+              <span class="role-badge role-badge--designer">DESIGNER</span>
+
+              <div class="team-stats" aria-label="Team member stats">
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CODE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="55%"></div>
+                  </div>
+                  <span class="stat-bar-val">55</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">DESIGN</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="92" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="92%"></div>
+                  </div>
+                  <span class="stat-bar-val">92</span>
+                </div>
+                <div class="stat-bar-row">
+                  <span class="stat-bar-label">CREATIVE</span>
+                  <div class="stat-bar-track" role="progressbar" aria-valuenow="88" aria-valuemin="0" aria-valuemax="100">
+                    <div class="stat-bar-fill" data-width="88%"></div>
+                  </div>
+                  <span class="stat-bar-val">88</span>
+                </div>
+              </div>
+
+              <p class="team-card__bio">
+                [BIO PLACEHOLDER — Add team member biography here. Describe their role, skills, and what they contributed to Jarry's House.]
+              </p>
+
+              <div class="team-card__socials" aria-label="Social links">
+                <a href="#" aria-label="GitHub profile">💻 GITHUB</a>
+                <a href="#" aria-label="LinkedIn profile">💼 LINKEDIN</a>
+                <a href="#" aria-label="Twitter profile">🐦 TWITTER</a>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================
+         ABOUT THE GAME
+         ============================================ -->
+    <section class="about-game" aria-labelledby="about-game-title">
+      <div class="container">
+        <h2 class="section-title" id="about-game-title">🏠 ABOUT THE GAME</h2>
+        <div class="about-game-grid reveal">
+
+          <div>
+            <p>
+              <strong>Jarry's House</strong> is a top-down pixel-art stealth and investigation game built with
+              Python and Pygame. The game takes place entirely inside one house and challenges the player to
+              uncover a mystery through careful exploration, stealth mechanics, and evidence gathering.
+            </p>
+            <p>
+              The player assumes the role of a secret investigator who has snuck into the home of a man named
+              Jarry. A beloved family fish named Patrick has gone missing, and all signs point to Jarry. But
+              the story is more layered than it first appears — and as you move through each room, you begin
+              to understand that this house has many secrets.
+            </p>
+            <p>
+              Each of the four levels — the Bedroom, the Kitchen, the Garage, and the Basement — presents
+              unique stealth challenges, collectibles, and narrative beats. Players must avoid Jarry's line of
+              sight, solve environmental puzzles, and collect three special vinyl records to unlock the truth.
+            </p>
+            <p>
+              The game was designed and built as a team project, combining programming, pixel art, level design,
+              and narrative writing to create a cohesive indie game experience playable directly in the browser
+              via Pygbag and WebAssembly.
+            </p>
+          </div>
+
+          <!-- Game details panel -->
+          <div>
+            <div class="stat-panel">
+              <div class="stat-panel__title">▓ PROJECT FILE ▓</div>
+              <div class="stat-row">
+                <span class="stat-row__label">ENGINE</span>
+                <span class="stat-row__value">Python / Pygame</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-row__label">DEPLOY</span>
+                <span class="stat-row__value">Pygbag / WASM</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-row__label">LEVELS</span>
+                <span class="stat-row__value">4 Rooms</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-row__label">COLLECTIBLES</span>
+                <span class="stat-row__value">3 Vinyl Records</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-row__label">ANTAGONIST</span>
+                <span class="stat-row__value">Jarry</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-row__label">MISSING</span>
+                <span class="stat-row__value">Patrick 🐟</span>
+              </div>
+              <!-- PLACEHOLDER: Replace with actual project year -->
+              <div class="stat-row">
+                <span class="stat-row__label">YEAR</span>
+                <span class="stat-row__value js-year"></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer__content">
+      <div class="footer__logo">🏠 JARRY'S HOUSE</div>
+      <nav class="footer__links" aria-label="Footer navigation">
+        <a href="#" aria-label="Twitter/X (coming soon)">🐦 TWITTER</a>
+        <a href="#" aria-label="GitHub (coming soon)">💻 GITHUB</a>
+        <a href="#" aria-label="itch.io (coming soon)">🎮 ITCH.IO</a>
+        <a href="#" aria-label="Discord (coming soon)">💬 DISCORD</a>
+      </nav>
+      <span class="footer__fish" aria-label="Patrick the fish">🐟</span>
+      <p class="footer__copy">
+        © <span class="js-year"></span> Jarry's House Development Team |
+        <!-- PLACEHOLDER: Replace with your university name -->
+        [UNIVERSITY PLACEHOLDER]
+      </p>
+      <p class="footer__built">Built with ❤️ and pixels</p>
+    </div>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>

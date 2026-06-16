@@ -8,10 +8,16 @@ pygame.display.set_caption("Jarry's House")
 
 fullscreen = False
 running = True
+class Slider:
+    def __init__(self, pos: tuple, size: tuple, initial_val: float, min: int, max: int) -> None:
+        self.pos = pos
+        self.size = size
+
+        self.slider_left_pos = self.pos
+
 
 #import
 Volume_button = pygame.image.load(join("images", "volume.png")).convert_alpha()
-Pause_button = pygame.image.load(join("images", "pause button.png")).convert_alpha()
 
 #centre buttons
 screen_width = screen.get_width()
