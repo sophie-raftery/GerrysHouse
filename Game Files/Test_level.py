@@ -4,7 +4,6 @@ from os.path import join
 import os
 from hotbar import Hotbar, Overlay, InventoryItem
 
-
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
@@ -78,6 +77,7 @@ class Dog(pygame.sprite.Sprite):
         super().__init__(groups)
         self.image = dog_down
         self.rect = self.image.get_rect(center=(1000, 420))
+           
         #self.player = player
         #self.image = dog_down
         #self.rect = self.image.get_rect(center=(900, 250))
