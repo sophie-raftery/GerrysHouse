@@ -69,14 +69,12 @@ class DogBowl:
         self.pos = pygame.Vector2(pos)
         self.has_bone = False
 
-        # Bowl image
+        # Bowl image — empty and filled variants, both at the same scale
         raw = pygame.image.load("images/Dog_bowl.png").convert_alpha()
         self.bowl_image = pygame.transform.scale(raw, (45, 45))
+        raw_full = pygame.image.load("images/Dog_Bowl+Bone.png").convert_alpha()
+        self.bowl_full_image = pygame.transform.scale(raw_full, (45, 45))
         self.rect = self.bowl_image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-
-        # Bone thumbnail to draw inside the bowl once placed
-        raw_bone = pygame.image.load("images/items/Dog_Bone.png").convert_alpha()
-        self.bone_image = pygame.transform.scale(raw_bone, (20, 20))
 
         # Prompt font
         self._font          = pygame.font.SysFont(None, 20)
@@ -101,6 +99,8 @@ class DogBowl:
         if selected and selected.name == "Dog_Bone":
             hotbar.slots[hotbar.selected_slot] = None
             self.has_bone = True
+            # Swap to the filled bowl image
+            self.bowl_image = self.bowl_full_image
             return True
 
         # Fallback: check all slots
@@ -108,6 +108,8 @@ class DogBowl:
             if slot and slot.name == "Dog_Bone":
                 hotbar.slots[i] = None
                 self.has_bone = True
+                # Swap to the filled bowl image
+                self.bowl_image = self.bowl_full_image
                 return True
 
         return False
@@ -120,13 +122,8 @@ class DogBowl:
             pygame.draw.circle(glow_surf, (255, 200, 80, 70), (45, 45), 40)
             surface.blit(glow_surf, glow_surf.get_rect(center=self.rect.center))
 
-        # Bowl
+        # Bowl — swaps to filled image automatically when bone is placed
         surface.blit(self.bowl_image, self.rect)
-
-        # Bone sitting in the bowl
-        if self.has_bone:
-            bone_rect = self.bone_image.get_rect(center=(self.rect.centerx, self.rect.centery + 4))
-            surface.blit(self.bone_image, bone_rect)
 
         # Prompt text
         cx = self.rect.centerx
@@ -319,16 +316,25 @@ class Dog(pygame.sprite.Sprite):
     # Avoidance strength relative to goal steering
     AVOID_WEIGHT  = 2.5
 
-    # Roaming bounds
-    ROAM_X = (80,  1200)
-    ROAM_Y = (80,  660)
-
-    PAUSE_MIN = 500
-    PAUSE_MAX = 2500
-
     # Stuck detection
     STUCK_DIST    = 4      # px moved threshold per check
     STUCK_CHECK   = 1.5    # seconds between stuck checks
+
+    # Fixed patrol loop — clockwise around the open garden.
+    # Matches the yellow arrow route in the design image.
+    PATROL = [
+        pygame.Vector2(220, 100),   # top-left corner
+        pygame.Vector2(500, 90),    # top-centre (right-going arrow)
+        pygame.Vector2(700, 100),   # top-right
+        pygame.Vector2(740, 270),   # right side coming down (red arrow start)
+        pygame.Vector2(720, 430),   # mid-right
+        pygame.Vector2(600, 570),   # bottom-right sweep
+        pygame.Vector2(380, 590),   # bottom-centre
+        pygame.Vector2(190, 560),   # bottom-left
+        pygame.Vector2(160, 430),   # left side going up
+        pygame.Vector2(180, 260),   # mid-left
+        pygame.Vector2(200, 140),   # back near top-left
+    ]
 
     def __init__(self, groups, player):
         super().__init__(groups)
@@ -344,20 +350,21 @@ class Dog(pygame.sprite.Sprite):
         self._anim_timer = pygame.time.get_ticks()
 
         self.image = self._anims[self._facing][0]
-        self.rect  = self.image.get_rect(center=(600, 400))
+        self.rect  = self.image.get_rect(center=(220, 100))
         self.pos   = pygame.Vector2(self.rect.center)
 
-        self._waypoint    = self._pick_waypoint()
-        self._pausing     = False
-        self._pause_until = 0
+        # Patrol state
+        self._patrol_idx  = 0
+        self._waypoint    = pygame.Vector2(self.PATROL[0])
 
-        self._fetching    = False
-        self._at_bowl     = False
-        self._bowl_pos    = pygame.Vector2(0, 0)
-        self._fetch_stage = 0
+        self._fetching        = False
+        self._at_bowl         = False
+        self._bowl_pos        = pygame.Vector2(0, 0)
+        self._fetch_stage     = 0
+        self._fetch_waypoints = []
 
         # Stuck detection
-        self._last_stuck_check = pygame.time.get_ticks()
+        self._last_stuck_check  = pygame.time.get_ticks()
         self._pos_at_last_check = pygame.Vector2(self.pos)
 
     # ------------------------------------------------------------------
@@ -365,19 +372,27 @@ class Dog(pygame.sprite.Sprite):
         self._fetching  = True
         self._at_bowl   = False
         self._pausing   = False
-        # Route via a waypoint on the LEFT side of the dog house before the bowl.
-        # Dog house topleft is (100, 500), opaque area starts ~x=119.
-        # Guide point: just left of the dog house and level with its top.
-        self._waypoint       = pygame.Vector2(85, 560)   # left-side guide point
-        self._bowl_pos       = pygame.Vector2(bowl_pos)  # final destination
-        self._fetch_stage    = 0   # 0 = heading to guide, 1 = heading to bowl
+        self._bowl_pos  = pygame.Vector2(bowl_pos)
+        # Multi-stage route that stays far right of the dog house
+        # Dog house: x=100-250, y=500-650. Bowl at (160,650).
+        # Stage 0: move to open ground well right of the house
+        # Stage 1: move down below the house (staying right)
+        # Stage 2: come in straight below the bowl
+        # Stage 3: arrive at bowl
+        self._fetch_waypoints = [
+            pygame.Vector2(420, 380),   # stage 0 – open ground, right side
+            pygame.Vector2(420, 690),   # stage 1 – below house level, far right
+            pygame.Vector2(160, 690),   # stage 2 – directly below bowl, clear of house
+            self._bowl_pos,             # stage 3 – bowl
+        ]
+        self._fetch_stage = 0
+        self._waypoint    = self._fetch_waypoints[0]
 
     # ------------------------------------------------------------------
-    def _pick_waypoint(self):
-        return pygame.Vector2(
-            random.randint(self.ROAM_X[0], self.ROAM_X[1]),
-            random.randint(self.ROAM_Y[0], self.ROAM_Y[1])
-        )
+    def _next_patrol_point(self):
+        """Advance to the next point in the patrol loop."""
+        self._patrol_idx = (self._patrol_idx + 1) % len(self.PATROL)
+        self._waypoint   = pygame.Vector2(self.PATROL[self._patrol_idx])
 
     # ------------------------------------------------------------------
     def _update_facing(self, direction):
@@ -507,34 +522,22 @@ class Dog(pygame.sprite.Sprite):
             self.image = self._anims['down'][0]
             return
 
-        # Pausing between random waypoints
-        if self._pausing:
-            self.image = self._anims[self._facing][0]
-            if now >= self._pause_until:
-                self._pausing  = False
-                self._waypoint = self._pick_waypoint()
-            return
-
         # --- Goal direction --------------------------------------------------
         to_target = self._waypoint - self.pos
         dist = to_target.length()
 
-        if dist <= self.WAYPOINT_DIST:
+        if dist <= self.WAYPOINT_DIST or dist == 0:
             if self._fetching:
-                if self._fetch_stage == 0:
-                    # Reached the left-side guide point — now head to bowl
-                    self._fetch_stage = 1
-                    self._waypoint    = self._bowl_pos
+                self._fetch_stage += 1
+                if self._fetch_stage < len(self._fetch_waypoints):
+                    self._waypoint = self._fetch_waypoints[self._fetch_stage]
                 else:
-                    # Reached the bowl — settle permanently
                     self._at_bowl  = True
                     self._fetching = False
                     self.image = self._anims['down'][0]
-                    return
             else:
-                self._pausing     = True
-                self._pause_until = now + random.randint(self.PAUSE_MIN, self.PAUSE_MAX)
-                return
+                self._next_patrol_point()
+            return   # always return after advancing — recalculate next frame
 
         goal_dir = to_target.normalize()
 
@@ -555,12 +558,12 @@ class Dog(pygame.sprite.Sprite):
             moved = (self.pos - self._pos_at_last_check).length()
             if moved < self.STUCK_DIST:
                 if self._fetching:
-                    # Nudge 90° sideways to unstick while keeping bowl target
                     perp = pygame.Vector2(-goal_dir.y, goal_dir.x)
                     self.pos += perp * 30
                     self.rect.center = (int(self.pos.x), int(self.pos.y))
                 else:
-                    self._waypoint = self._pick_waypoint()
+                    # Skip to the next patrol point to get unstuck
+                    self._next_patrol_point()
             self._last_stuck_check  = now
             self._pos_at_last_check = pygame.Vector2(self.pos)
 
