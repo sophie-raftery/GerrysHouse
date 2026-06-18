@@ -2,6 +2,7 @@ import pygame
 import math
 from os.path import join
 from hotbar import Hotbar, Overlay, InventoryItem
+from door import Door
 
 
 # ---------------------------------------------------------------------------
@@ -76,8 +77,6 @@ class DogBowl:
         return False
 
     def draw(self, surface, dog_at_bowl):
-        if dog_at_bowl:
-            return
         if self.show_prompt and not self.has_bone:
             glow_surf = pygame.Surface((90, 90), pygame.SRCALPHA)
             pygame.draw.circle(glow_surf, (255, 200, 80, 70), (45, 45), 40)
@@ -156,11 +155,7 @@ class DirtMound:
             else:
                 surface.blit(self._prompt_shadow, (cx - self._prompt_surf.get_width() // 2 + 1, ty + 1))
                 surface.blit(self._prompt_surf,   (cx - self._prompt_surf.get_width() // 2,     ty))
-
-
-# ---------------------------------------------------------------------------
 # Player
-# ---------------------------------------------------------------------------
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
@@ -227,18 +222,14 @@ class Dog(pygame.sprite.Sprite):
     STUCK_DIST    = 4
     STUCK_CHECK   = 1.5
 
+    # Patrol stays clear of the bottom-left / dog house area (x<380, y>400)
     PATROL = [
-        pygame.Vector2(220, 100),
-        pygame.Vector2(500,  90),
-        pygame.Vector2(700, 100),
-        pygame.Vector2(740, 270),
-        pygame.Vector2(720, 430),
-        pygame.Vector2(600, 570),
-        pygame.Vector2(380, 590),
-        pygame.Vector2(190, 560),
-        pygame.Vector2(160, 430),
-        pygame.Vector2(180, 260),
-        pygame.Vector2(200, 140),
+        pygame.Vector2(300, 110),   # top-left (pulled right of far-left edge)
+        pygame.Vector2(680, 100),   # top-right
+        pygame.Vector2(730, 450),   # right side coming down
+        pygame.Vector2(550, 580),   # bottom-right
+        pygame.Vector2(350, 570),   # bottom-centre (stops well clear of dog house)
+        pygame.Vector2(300, 280),   # rising back up, staying right of dog house
     ]
 
     def __init__(self, groups, player):
@@ -253,10 +244,10 @@ class Dog(pygame.sprite.Sprite):
         self._frame_idx  = 0
         self._anim_timer = pygame.time.get_ticks()
         self.image = self._anims[self._facing][0]
-        self.rect  = self.image.get_rect(center=(220, 100))
+        self.rect  = self.image.get_rect(center=(301, 111))   # offset from PATROL[0]
         self.pos   = pygame.Vector2(self.rect.center)
         self._patrol_idx  = 0
-        self._waypoint    = pygame.Vector2(self.PATROL[0])
+        self._waypoint    = pygame.Vector2(self.PATROL[1])    # aim at next point immediately
         self._fetching        = False
         self._at_bowl         = False
         self._bowl_pos        = pygame.Vector2(0, 0)
@@ -414,10 +405,8 @@ class Dog(pygame.sprite.Sprite):
 
         self._tick_animation()
 
-
-# ---------------------------------------------------------------------------
 # Initialisation
-# ---------------------------------------------------------------------------
+
 pygame.init()
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -487,8 +476,17 @@ ground_items_group = pygame.sprite.Group()
 ground_shovel = GroundItem(ground_items_group, shovel, (1220, 420))
 
 # World objects
-dog_bowl  = DogBowl((290, 580))
+dog_bowl   = DogBowl((290, 580))
 dirt_mound = DirtMound((1050, 640), dog_bone, dirty_shovel)
+
+# Door — leads to Level 2 (swap target_module when Level 2 exists)
+# Positioned at the front door of the house (~920, 390)
+front_door = Door(
+    pos           = (1004, 320),
+    target_module = "Level1/Lvl 1 Gerry room.py",  # file path — supports spaces
+    image_path    = None,
+    size          = (40, 60),
+)
 
 # Sprites
 all_sprites = pygame.sprite.Group()
@@ -527,7 +525,10 @@ while running:
                 mound_dist = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos)
                 bowl_dist  = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)
 
-                if mound_dist <= DirtMound.INTERACT_RADIUS:
+                if front_door.try_enter(player):
+                    front_door.transition(display_surface)
+                    front_door.load_next_level()
+                elif mound_dist <= DirtMound.INTERACT_RADIUS:
                     dirt_mound.try_dig(overlay.hotbar)
                 elif bowl_dist <= DogBowl.INTERACT_RADIUS:
                     if dog_bowl.try_place_bone(overlay.hotbar):
@@ -545,6 +546,7 @@ while running:
         gitem.show_prompt = pygame.Vector2(player.rect.center).distance_to(gitem.rect.center) <= GroundItem.PICKUP_RADIUS
     dog_bowl.show_prompt   = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)   <= DogBowl.INTERACT_RADIUS
     dirt_mound.show_prompt = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos) <= DirtMound.INTERACT_RADIUS
+    front_door.update(player)
 
     all_sprites.update(dt)
     ground_items_group.update(dt)
@@ -595,6 +597,7 @@ while running:
 
     dirt_mound.draw(display_surface)
     dog_bowl.draw(display_surface, dog._at_bowl)
+    front_door.draw(display_surface)
     overlay.display(display_surface)
     pygame.display.update()
 
