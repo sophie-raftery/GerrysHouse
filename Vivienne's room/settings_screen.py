@@ -17,7 +17,7 @@ class Slider:
 
 
 #import
-Volume_button = pygame.image.load(join("images", "volume.png")).convert_alpha()
+Volume_button = pygame.image.load(join("images", "buttons", "volume.png")).convert_alpha()
 
 #centre buttons
 screen_width = screen.get_width()
