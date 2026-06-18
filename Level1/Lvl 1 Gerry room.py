@@ -17,9 +17,9 @@ DEBUG_COLLISIONS = False
 _WALL_T = 40
 COLLISION_RECTS = [
     # Border walls
-    pygame.Rect(0,              0,    1280, _WALL_T),  # top
-    pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),  # bottom
-    pygame.Rect(0,              0,  _WALL_T, 720),     # left
+    pygame.Rect(0,  0, 1280, 250),  # top
+    pygame.Rect(0, 720 - _WALL_T,  1280, _WALL_T),  # bottom
+    pygame.Rect(0, 0,  _WALL_T, 720),     # left
     pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),     # right
     # Furniture — tune x, y, w, h to fit the background image
     pygame.Rect(0,   0,   300, 200),   # bed (top-left)
@@ -102,8 +102,8 @@ class InteractableBox:
 class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
-        self.image = pygame.image.load(
-            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
+        self.image = pygame.transform.scale_by(pygame.image.load(
+            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 1.5)
         self.rect  = self.image.get_frect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
         self.direction    = pygame.Vector2()
         self.base_speed   = 100
@@ -177,16 +177,16 @@ def run():
         (WINDOW_WIDTH, WINDOW_HEIGHT))
 
     # ---- Player walk animations --------------------------------------------
-    walk_forward       = [pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png") for i in range(1, 5)]
-    walk_back          = [pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png") for i in range(1, 5)]
-    walk_right         = [pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png") for i in range(1, 5)]
-    walk_left          = [pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png") for i in range(1, 5)]
-    walk_forward_right = [pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png") for i in range(1, 5)]
-    walk_forward_left  = [pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png") for i in range(1, 5)]
+    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 1.5) for i in range(1, 5)]
     walk_back_right    = [pygame.transform.scale_by(
-        pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.65) for i in range(1, 6)]
+        pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.975) for i in range(1, 6)]
     walk_back_left     = [pygame.transform.scale_by(
-        pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.65) for i in range(1, 6)]
+        pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.975) for i in range(1, 6)]
 
     # ---- Minesweeper number images -----------------------------------------
     # Swap these paths once you have the real art assets.
