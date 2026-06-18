@@ -1,343 +1,318 @@
+
 import pygame
 import random
-import sys
+import math
 
-# --- Settings ---
-ROWS = 9
-COLS = 9
+# ---------------------------------------------------------------------------
+# Layout constants
+# ---------------------------------------------------------------------------
+ROWS      = 9
+COLS      = 9
 NUM_MINES = 10
-CELL_SIZE = 50
-MARGIN = 2
+CELL_SIZE = 54
+TOP_BAR   = 64
 
-# Top bar height (for status + timer)
-TOP_BAR = 60
-WIDTH = COLS * CELL_SIZE
-HEIGHT = ROWS * CELL_SIZE + TOP_BAR
+PANEL_W = COLS * CELL_SIZE
+PANEL_H = ROWS * CELL_SIZE + TOP_BAR
 
 # Colours
-BG_COLOR         = (189, 189, 189)
-CELL_HIDDEN      = (160, 160, 160)
-CELL_REVEALED    = (210, 210, 210)
-CELL_HOVER       = (180, 180, 180)
-BORDER_DARK      = (100, 100, 100)
-BORDER_LIGHT     = (255, 255, 255)
-MINE_COLOR       = (30, 30, 30)
-FLAG_COLOR       = (220, 40, 40)
-FLAGPOLE_COLOR   = (50, 50, 50)
-EXPLODED_COLOR   = (255, 80, 80)
-TEXT_COLOR       = (20, 20, 20)
-WIN_OVERLAY      = (0, 180, 0, 160)
-LOSE_OVERLAY     = (180, 0, 0, 160)
+BG            = (189, 189, 189)
+CELL_HIDDEN   = (160, 160, 160)
+CELL_REVEALED = (210, 210, 210)
+CELL_HOVER    = (180, 200, 180)
+CELL_EXPLODED = (255, 80,  80)
+BORDER_LIGHT  = (255, 255, 255)
+BORDER_DARK   = (100, 100, 100)
+MINE_COL      = (30,  30,  30)
+FLAG_COL      = (220, 40,  40)
 
-# Number colours (classic minesweeper palette)
 NUM_COLORS = {
-    1: (0, 0, 200),
-    2: (0, 130, 0),
-    3: (200, 0, 0),
-    4: (0, 0, 130),
-    5: (130, 0, 0),
-    6: (0, 130, 130),
-    7: (130, 0, 130),
-    8: (80, 80, 80),
+    1: (0,   0,   200),
+    2: (0,   130, 0),
+    3: (200, 0,   0),
+    4: (0,   0,   130),
+    5: (130, 0,   0),
+    6: (0,   130, 130),
+    7: (130, 0,   130),
+    8: (80,  80,  80),
 }
 
-# --- Board logic ---
 
-def create_board():
-    return [[0] * COLS for _ in range(ROWS)]
+# ---------------------------------------------------------------------------
+# Board helpers
+# ---------------------------------------------------------------------------
+def _new_game():
+    return {
+        "board":     [[0] * COLS for _ in range(ROWS)],
+        "revealed":  [[False] * COLS for _ in range(ROWS)],
+        "flagged":   [[False] * COLS for _ in range(ROWS)],
+        "first":     True,
+        "over":      False,
+        "won":       False,
+        "exploded":  None,
+        "flags":     0,
+        "t_start":   None,
+        "elapsed":   0,
+    }
 
-def place_mines(board, safe_r, safe_c):
+
+def _place_mines(board, sr, sc):
     placed = 0
     while placed < NUM_MINES:
-        r = random.randint(0, ROWS - 1)
-        c = random.randint(0, COLS - 1)
-        if board[r][c] != -1 and not (r == safe_r and c == safe_c):
+        r, c = random.randint(0, ROWS - 1), random.randint(0, COLS - 1)
+        if board[r][c] != -1 and not (r == sr and c == sc):
             board[r][c] = -1
             placed += 1
 
-def fill_numbers(board):
+
+def _fill_numbers(board):
     for r in range(ROWS):
         for c in range(COLS):
             if board[r][c] != -1:
-                count = 0
-                for dr in range(-1, 2):
-                    for dc in range(-1, 2):
-                        nr, nc = r + dr, c + dc
-                        if 0 <= nr < ROWS and 0 <= nc < COLS and board[nr][nc] == -1:
-                            count += 1
-                board[r][c] = count
+                board[r][c] = sum(
+                    1 for dr in range(-1, 2) for dc in range(-1, 2)
+                    if 0 <= r+dr < ROWS and 0 <= c+dc < COLS
+                    and board[r+dr][c+dc] == -1
+                )
 
-def reveal(board, revealed, r, c):
+
+def _reveal(board, revealed, r, c):
     if revealed[r][c]:
         return
     revealed[r][c] = True
     if board[r][c] == 0:
         for dr in range(-1, 2):
             for dc in range(-1, 2):
-                nr, nc = r + dr, c + dc
+                nr, nc = r+dr, c+dc
                 if 0 <= nr < ROWS and 0 <= nc < COLS and not revealed[nr][nc]:
-                    reveal(board, revealed, nr, nc)
+                    _reveal(board, revealed, nr, nc)
 
-def check_win(board, revealed):
-    for r in range(ROWS):
-        for c in range(COLS):
-            if board[r][c] != -1 and not revealed[r][c]:
-                return False
-    return True
 
-# --- Drawing helpers ---
+def _check_win(board, revealed):
+    return all(
+        revealed[r][c]
+        for r in range(ROWS) for c in range(COLS)
+        if board[r][c] != -1
+    )
 
-def draw_raised_cell(surface, x, y, size, color):
-    """Draws a cell with a classic raised 3D border."""
-    pygame.draw.rect(surface, color, (x, y, size, size))
-    # Light top/left edges
-    pygame.draw.line(surface, BORDER_LIGHT, (x, y + size - 1), (x, y), 2)
-    pygame.draw.line(surface, BORDER_LIGHT, (x, y), (x + size - 1, y), 2)
-    # Dark bottom/right edges
-    pygame.draw.line(surface, BORDER_DARK, (x + size - 1, y), (x + size - 1, y + size - 1), 2)
-    pygame.draw.line(surface, BORDER_DARK, (x, y + size - 1), (x + size - 1, y + size - 1), 2)
 
-def draw_sunken_cell(surface, x, y, size, color):
-    """Draws a flat revealed cell with a subtle sunken border."""
-    pygame.draw.rect(surface, color, (x, y, size, size))
-    pygame.draw.line(surface, BORDER_DARK, (x, y + size - 1), (x, y), 1)
-    pygame.draw.line(surface, BORDER_DARK, (x, y), (x + size - 1, y), 1)
+# ---------------------------------------------------------------------------
+# Draw helpers
+# ---------------------------------------------------------------------------
+def _raised(surf, x, y, s, col):
+    pygame.draw.rect(surf, col, (x, y, s, s))
+    pygame.draw.line(surf, BORDER_LIGHT, (x, y+s-1), (x, y), 2)
+    pygame.draw.line(surf, BORDER_LIGHT, (x, y), (x+s-1, y), 2)
+    pygame.draw.line(surf, BORDER_DARK,  (x+s-1, y), (x+s-1, y+s-1), 2)
+    pygame.draw.line(surf, BORDER_DARK,  (x, y+s-1), (x+s-1, y+s-1), 2)
 
-def draw_mine(surface, cx, cy, radius=10):
-    pygame.draw.circle(surface, MINE_COLOR, (cx, cy), radius)
-    # Spikes
-    for angle in range(0, 360, 45):
-        import math
-        rad = math.radians(angle)
-        ex = int(cx + (radius + 5) * math.cos(rad))
-        ey = int(cy + (radius + 5) * math.sin(rad))
-        pygame.draw.line(surface, MINE_COLOR, (cx, cy), (ex, ey), 2)
-    # Shine dot
-    pygame.draw.circle(surface, (255, 255, 255), (cx - 3, cy - 3), 3)
 
-def draw_flag(surface, cx, cy):
-    pole_x = cx - 4
-    pygame.draw.line(surface, FLAGPOLE_COLOR, (pole_x, cy + 10), (pole_x, cy - 10), 3)
-    flag_points = [(pole_x, cy - 10), (pole_x + 12, cy - 4), (pole_x, cy + 2)]
-    pygame.draw.polygon(surface, FLAG_COLOR, flag_points)
+def _sunken(surf, x, y, s, col):
+    pygame.draw.rect(surf, col, (x, y, s, s))
+    pygame.draw.line(surf, BORDER_DARK, (x, y+s-1), (x, y), 1)
+    pygame.draw.line(surf, BORDER_DARK, (x, y), (x+s-1, y), 1)
 
-def draw_smiley(surface, cx, cy, radius, state):
-    """Draw a smiley/dead/cool face button in the top bar."""
-    # Face
-    face_color = (255, 220, 50)
-    pygame.draw.circle(surface, face_color, (cx, cy), radius)
-    pygame.draw.circle(surface, (0, 0, 0), (cx, cy), radius, 2)
 
+def _mine(surf, cx, cy, r=10):
+    pygame.draw.circle(surf, MINE_COL, (cx, cy), r)
+    for a in range(0, 360, 45):
+        ex = int(cx + (r+5)*math.cos(math.radians(a)))
+        ey = int(cy + (r+5)*math.sin(math.radians(a)))
+        pygame.draw.line(surf, MINE_COL, (cx, cy), (ex, ey), 2)
+    pygame.draw.circle(surf, (255, 255, 255), (cx-3, cy-3), 3)
+
+
+def _flag(surf, cx, cy):
+    pygame.draw.line(surf, (50, 50, 50), (cx-4, cy+10), (cx-4, cy-10), 3)
+    pygame.draw.polygon(surf, FLAG_COL, [(cx-4, cy-10), (cx+8, cy-4), (cx-4, cy+2)])
+
+
+def _smiley(surf, cx, cy, rad, state):
+    pygame.draw.circle(surf, (255, 220, 50), (cx, cy), rad)
+    pygame.draw.circle(surf, (0, 0, 0), (cx, cy), rad, 2)
     if state == "win":
-        # Sunglasses
-        pygame.draw.rect(surface, (0, 0, 0), (cx - radius + 4, cy - 6, radius - 2, 8), border_radius=3)
-        pygame.draw.rect(surface, (0, 0, 0), (cx + 2, cy - 6, radius - 2, 8), border_radius=3)
-        pygame.draw.line(surface, (0, 0, 0), (cx - 5, cy - 2), (cx + 2, cy - 2), 2)
-        # Smile
-        pygame.draw.arc(surface, (0, 0, 0),
-                        (cx - 10, cy, 20, 14), 3.14, 0, 2)
+        for ox in (-rad+4, 2):
+            pygame.draw.rect(surf, (0,0,0), (cx+ox, cy-6, rad-2, 8), border_radius=3)
+        pygame.draw.line(surf, (0,0,0), (cx-5, cy-2), (cx+2, cy-2), 2)
+        pygame.draw.arc(surf, (0,0,0), (cx-10, cy, 20, 14), math.pi, 0, 2)
     elif state == "dead":
-        # X eyes
-        for ex, ey in [(cx - 7, cy - 5), (cx + 3, cy - 5)]:
-            pygame.draw.line(surface, (0, 0, 0), (ex, ey), (ex + 6, ey + 6), 2)
-            pygame.draw.line(surface, (0, 0, 0), (ex + 6, ey), (ex, ey + 6), 2)
-        # Flat mouth
-        pygame.draw.line(surface, (0, 0, 0), (cx - 8, cy + 8), (cx + 8, cy + 8), 2)
+        for ex, ey in [(cx-7, cy-5), (cx+3, cy-5)]:
+            pygame.draw.line(surf, (0,0,0), (ex, ey), (ex+6, ey+6), 2)
+            pygame.draw.line(surf, (0,0,0), (ex+6, ey), (ex, ey+6), 2)
+        pygame.draw.line(surf, (0,0,0), (cx-8, cy+8), (cx+8, cy+8), 2)
     else:
-        # Normal eyes
-        pygame.draw.circle(surface, (0, 0, 0), (cx - 6, cy - 4), 3)
-        pygame.draw.circle(surface, (0, 0, 0), (cx + 6, cy - 4), 3)
-        # Smile
-        pygame.draw.arc(surface, (0, 0, 0),
-                        (cx - 10, cy + 1, 20, 12), 3.14, 0, 2)
+        pygame.draw.circle(surf, (0,0,0), (cx-6, cy-4), 3)
+        pygame.draw.circle(surf, (0,0,0), (cx+6, cy-4), 3)
+        pygame.draw.arc(surf, (0,0,0), (cx-10, cy+1, 20, 12), math.pi, 0, 2)
 
-def draw_board(surface, board, revealed, flagged, hover, game_over, exploded, font):
-    surface.fill(BG_COLOR)
 
-    for r in range(ROWS):
-        for c in range(COLS):
-            x = c * CELL_SIZE
-            y = r * CELL_SIZE + TOP_BAR
+def _overlay(surf, won):
+    ov = pygame.Surface((PANEL_W, PANEL_H - TOP_BAR), pygame.SRCALPHA)
+    ov.fill((0, 160, 0, 140) if won else (160, 0, 0, 140))
+    surf.blit(ov, (0, TOP_BAR))
+    f  = pygame.font.SysFont("Arial", 36, bold=True)
+    sf = pygame.font.SysFont("Arial", 18)
+    msg = "  YOU WIN!  " if won else "  GAME OVER  "
+    t  = f.render(msg, True, (255, 255, 255))
+    tr = t.get_rect(center=(PANEL_W//2, TOP_BAR + (PANEL_H-TOP_BAR)//2))
+    surf.blit(t, tr)
+    s  = sf.render("Click smiley to play again  |  ESC to exit", True, (255, 255, 255))
+    surf.blit(s, s.get_rect(center=(PANEL_W//2, tr.bottom + 20)))
 
-            is_hover = (hover == (r, c)) and not revealed[r][c] and not game_over
 
-            if revealed[r][c]:
-                cell_color = EXPLODED_COLOR if (r, c) == exploded else CELL_REVEALED
-                draw_sunken_cell(surface, x, y, CELL_SIZE, cell_color)
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
+def run(parent_surface=None, number_images=None):
+    """
+    Run the minesweeper mini-game in a centred window overlay.
 
-                if board[r][c] == -1:
-                    draw_mine(surface, x + CELL_SIZE // 2, y + CELL_SIZE // 2)
-                elif board[r][c] > 0:
-                    num_surf = font.render(str(board[r][c]), True, NUM_COLORS[board[r][c]])
-                    nr = num_surf.get_rect(center=(x + CELL_SIZE // 2, y + CELL_SIZE // 2))
-                    surface.blit(num_surf, nr)
-            else:
-                cell_color = CELL_HOVER if is_hover else CELL_HIDDEN
-                draw_raised_cell(surface, x, y, CELL_SIZE, cell_color)
+    Parameters
+    ----------
+    parent_surface : the game's display surface (used to centre the panel)
+    number_images  : dict  {1: surf, 2: surf, 3: surf}  custom images for counts
 
-                if flagged[r][c]:
-                    draw_flag(surface, x + CELL_SIZE // 2, y + CELL_SIZE // 2)
-                elif game_over and board[r][c] == -1:
-                    # Reveal all mines on game over
-                    draw_mine(surface, x + CELL_SIZE // 2, y + CELL_SIZE // 2)
+    Returns True if the player won, False if they quit/lost without winning.
+    """
+    # Pre-scale custom images to fit inside a cell
+    cell_inner = CELL_SIZE - 10
+    custom = {}
+    if number_images:
+        for k, img in number_images.items():
+            custom[k] = pygame.transform.smoothscale(img, (cell_inner, cell_inner))
 
-def draw_top_bar(surface, mines_left, elapsed, face_state, face_rect, font_big, font_small):
-    pygame.draw.rect(surface, BG_COLOR, (0, 0, WIDTH, TOP_BAR))
-    pygame.draw.line(surface, BORDER_DARK, (0, TOP_BAR), (WIDTH, TOP_BAR), 2)
+    if parent_surface is None:
+        parent_surface = pygame.display.get_surface()
 
-    # Mine counter (left)
-    mine_text = font_big.render(f"{max(mines_left, 0):03d}", True, (200, 0, 0))
-    surface.blit(mine_text, (10, TOP_BAR // 2 - mine_text.get_height() // 2))
+    sw, sh = parent_surface.get_size()
+    ox = (sw - PANEL_W) // 2   # panel offset x
+    oy = (sh - PANEL_H) // 2   # panel offset y
 
-    # Timer (right)
-    timer_text = font_big.render(f"{min(elapsed, 999):03d}", True, (200, 0, 0))
-    surface.blit(timer_text, (WIDTH - timer_text.get_width() - 10,
-                               TOP_BAR // 2 - timer_text.get_height() // 2))
-
-    # Smiley face button (center)
-    draw_smiley(surface, face_rect.centerx, face_rect.centery, 18, face_state)
-
-    # Hint text
-    hint = font_small.render("Left click: reveal   Right click: flag", True, TEXT_COLOR)
-    # (skipped to keep bar clean — shown in window title instead)
-
-def draw_overlay(surface, message):
-    overlay = pygame.Surface((WIDTH, HEIGHT - TOP_BAR), pygame.SRCALPHA)
-    color = (0, 160, 0, 140) if "WIN" in message else (160, 0, 0, 140)
-    overlay.fill(color)
-    surface.blit(overlay, (0, TOP_BAR))
-
-    font = pygame.font.SysFont("Arial", 36, bold=True)
-    text = font.render(message, True, (255, 255, 255))
-    tr = text.get_rect(center=(WIDTH // 2, TOP_BAR + (HEIGHT - TOP_BAR) // 2))
-    surface.blit(text, tr)
-
-    sub_font = pygame.font.SysFont("Arial", 18)
-    sub = sub_font.render("Click the smiley to play again", True, (255, 255, 255))
-    sr = sub.get_rect(center=(WIDTH // 2, tr.bottom + 20))
-    surface.blit(sub, sr)
-
-# --- Main game loop ---
-
-def new_game():
-    return {
-        "board":    create_board(),
-        "revealed": [[False] * COLS for _ in range(ROWS)],
-        "flagged":  [[False] * COLS for _ in range(ROWS)],
-        "first_move": True,
-        "game_over":  False,
-        "won":        False,
-        "exploded":   None,
-        "flags_placed": 0,
-        "start_ticks":  None,
-        "elapsed":      0,
-    }
-
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Minesweeper  |  Right-click to flag")
-    clock = pygame.time.Clock()
+    panel  = pygame.Surface((PANEL_W, PANEL_H))
+    clock  = pygame.time.Clock()
 
     font_num   = pygame.font.SysFont("Arial", 26, bold=True)
     font_big   = pygame.font.SysFont("Consolas", 28, bold=True)
-    font_small = pygame.font.SysFont("Arial", 13)
+    face_rect  = pygame.Rect(PANEL_W//2 - 20, TOP_BAR//2 - 20, 40, 40)
 
-    face_rect = pygame.Rect(WIDTH // 2 - 20, TOP_BAR // 2 - 20, 40, 40)
-
-    state = new_game()
+    state = _new_game()
     hover = None
 
     while True:
-        # --- Events ---
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return False
+                if event.key == pygame.K_p:
+                    return True   # debug: instant win
 
             if event.type == pygame.MOUSEMOTION:
-                mx, my = event.pos
+                mx, my = event.pos[0] - ox, event.pos[1] - oy
                 if my > TOP_BAR:
-                    r = (my - TOP_BAR) // CELL_SIZE
-                    c = mx // CELL_SIZE
+                    r, c = (my - TOP_BAR) // CELL_SIZE, mx // CELL_SIZE
                     hover = (r, c) if 0 <= r < ROWS and 0 <= c < COLS else None
                 else:
                     hover = None
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                mx, my = event.pos
+                mx, my = event.pos[0] - ox, event.pos[1] - oy
 
-                # Smiley / reset button
+                # Reset button
                 if face_rect.collidepoint(mx, my):
-                    state = new_game()
+                    state = _new_game()
                     continue
 
-                if my <= TOP_BAR or state["game_over"] or state["won"]:
+                if my <= TOP_BAR or state["over"] or state["won"]:
                     continue
 
-                r = (my - TOP_BAR) // CELL_SIZE
-                c = mx // CELL_SIZE
+                r, c = (my - TOP_BAR) // CELL_SIZE, mx // CELL_SIZE
                 if not (0 <= r < ROWS and 0 <= c < COLS):
                     continue
 
-                if event.button == 1:  # Left click — reveal
+                if event.button == 1:   # reveal
                     if state["flagged"][r][c] or state["revealed"][r][c]:
                         continue
-
-                    if state["first_move"]:
-                        place_mines(state["board"], r, c)
-                        fill_numbers(state["board"])
-                        state["first_move"] = False
-                        state["start_ticks"] = pygame.time.get_ticks()
-
-                    reveal(state["board"], state["revealed"], r, c)
-
+                    if state["first"]:
+                        _place_mines(state["board"], r, c)
+                        _fill_numbers(state["board"])
+                        state["first"]   = False
+                        state["t_start"] = pygame.time.get_ticks()
+                    _reveal(state["board"], state["revealed"], r, c)
                     if state["board"][r][c] == -1:
-                        state["game_over"] = True
+                        state["over"]     = True
                         state["exploded"] = (r, c)
-                        # Reveal all mines
                         for mr in range(ROWS):
                             for mc in range(COLS):
                                 if state["board"][mr][mc] == -1:
                                     state["revealed"][mr][mc] = True
-                    elif check_win(state["board"], state["revealed"]):
+                    elif _check_win(state["board"], state["revealed"]):
                         state["won"] = True
+                        return True    # ← signal win immediately
 
-                elif event.button == 3:  # Right click — flag
+                elif event.button == 3:  # flag
                     if state["revealed"][r][c]:
                         continue
+                    state["flagged"][r][c] = not state["flagged"][r][c]
+                    state["flags"] += 1 if state["flagged"][r][c] else -1
+
+        # Timer
+        if state["t_start"] and not state["over"] and not state["won"]:
+            state["elapsed"] = (pygame.time.get_ticks() - state["t_start"]) // 1000
+
+        # --- Draw panel -----------------------------------------------------
+        panel.fill(BG)
+
+        for r in range(ROWS):
+            for c in range(COLS):
+                x = c * CELL_SIZE
+                y = r * CELL_SIZE + TOP_BAR
+                cx_cell = x + CELL_SIZE // 2
+                cy_cell = y + CELL_SIZE // 2
+
+                if state["revealed"][r][c]:
+                    col = CELL_EXPLODED if (r, c) == state["exploded"] else CELL_REVEALED
+                    _sunken(panel, x, y, CELL_SIZE, col)
+                    val = state["board"][r][c]
+                    if val == -1:
+                        _mine(panel, cx_cell, cy_cell)
+                    elif val > 0:
+                        if val in custom:
+                            panel.blit(custom[val],
+                                       custom[val].get_rect(center=(cx_cell, cy_cell)))
+                        else:
+                            t = font_num.render(str(val), True, NUM_COLORS[val])
+                            panel.blit(t, t.get_rect(center=(cx_cell, cy_cell)))
+                else:
+                    is_hover = (hover == (r, c)) and not state["over"]
+                    _raised(panel, x, y, CELL_SIZE, CELL_HOVER if is_hover else CELL_HIDDEN)
                     if state["flagged"][r][c]:
-                        state["flagged"][r][c] = False
-                        state["flags_placed"] -= 1
-                    else:
-                        state["flagged"][r][c] = True
-                        state["flags_placed"] += 1
+                        _flag(panel, cx_cell, cy_cell)
+                    elif (state["over"] or state["won"]) and state["board"][r][c] == -1:
+                        _mine(panel, cx_cell, cy_cell)
 
-        # --- Timer ---
-        if state["start_ticks"] and not state["game_over"] and not state["won"]:
-            state["elapsed"] = (pygame.time.get_ticks() - state["start_ticks"]) // 1000
+        # Top bar
+        panel.fill(BG, (0, 0, PANEL_W, TOP_BAR))
+        pygame.draw.line(panel, BORDER_DARK, (0, TOP_BAR), (PANEL_W, TOP_BAR), 2)
+        mines_left = NUM_MINES - state["flags"]
+        ct = font_big.render(f"{max(mines_left,0):03d}", True, (200, 0, 0))
+        panel.blit(ct, (10, TOP_BAR//2 - ct.get_height()//2))
+        tt = font_big.render(f"{min(state['elapsed'],999):03d}", True, (200, 0, 0))
+        panel.blit(tt, (PANEL_W - tt.get_width() - 10, TOP_BAR//2 - tt.get_height()//2))
 
-        # --- Face state ---
-        if state["won"]:
-            face_state = "win"
-        elif state["game_over"]:
-            face_state = "dead"
-        else:
-            face_state = "normal"
+        fs = "win" if state["won"] else ("dead" if state["over"] else "normal")
+        _smiley(panel, face_rect.centerx, face_rect.centery, 18, fs)
 
-        mines_left = NUM_MINES - state["flags_placed"]
-
-        # --- Draw ---
-        draw_board(screen, state["board"], state["revealed"], state["flagged"],
-                   hover, state["game_over"] or state["won"], state["exploded"], font_num)
-        draw_top_bar(screen, mines_left, state["elapsed"], face_state, face_rect, font_big, font_small)
-
-        if state["game_over"]:
-            draw_overlay(screen, "  GAME OVER  ")
+        if state["over"]:
+            _overlay(panel, False)
         elif state["won"]:
-            draw_overlay(screen, "  YOU WIN!  ")
+            _overlay(panel, True)
 
-        pygame.display.flip()
+        # Blit panel onto parent, with a dark backdrop
+        backdrop = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        backdrop.fill((0, 0, 0, 160))
+        parent_surface.blit(backdrop, (0, 0))
+        parent_surface.blit(panel, (ox, oy))
+        pygame.display.update()
         clock.tick(60)
-
-main()
