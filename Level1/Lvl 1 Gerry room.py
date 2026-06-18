@@ -10,8 +10,9 @@ from hotbar import Hotbar, Overlay, InventoryItem
 import minesweeper
 import shared_state
 
+
 DEBUG_COLLISIONS = False
- 
+
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
@@ -143,13 +144,13 @@ class MakeBed:
 # ExitDoor  – requires a vinyl + key; returns to Test_level
 # ---------------------------------------------------------------------------
 class ExitDoor:
-    INTERACT_RADIUS = 80
+    INTERACT_RADIUS = 180
 
     def __init__(self, pos):
         self.pos         = pygame.Vector2(pos)
         self.show_prompt = False
         self._unlocked   = False
-        self.image = pygame.Surface((110, 64), pygame.SRCALPHA)
+        self.image = pygame.Surface((200, 120), pygame.SRCALPHA)
         self.image.fill((140, 90, 50, 230))
         pygame.draw.rect(self.image, (80, 80, 10), self.image.get_rect(), 3)
         pygame.draw.circle(self.image, (220, 180, 60), (34, 34), 5)
@@ -180,7 +181,7 @@ class ExitDoor:
             glow = pygame.Surface((70, 80), pygame.SRCALPHA)
             pygame.draw.ellipse(glow, col, glow.get_rect())
             surface.blit(glow, glow.get_rect(center=self.rect.center))
-        surface.blit(self.image, self.rect)
+        # Door image intentionally not drawn — invisible but hitbox is still active
         if self.show_prompt:
             lbl  = self._open_s  if self._unlocked else self._lock_s
             shad = self._open_sh if self._unlocked else self._lock_sh
