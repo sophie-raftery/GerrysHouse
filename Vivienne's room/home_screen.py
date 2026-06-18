@@ -16,23 +16,29 @@ fullscreen = False
 running = True
 
 #switching betweeen pages
-HOME = 0
-MAIN_MENU = 1
-SETTING = 2
+#HOME = 0
+#MAIN_MENU = 1
+#SETTING = 2
 
-game_state = HOME
+#game_state = HOME
 
 #import
 text1 = font1.render("Welcome to Jarry's House", True, color)
 text2 = font2.render("Click anywhere to begin", True, color)
 Home_image = pygame.image.load(join("images", "jarrys_house.png")).convert_alpha() 
+Ground = pygame.image.load(join("images", "ground.png")).convert_alpha() 
+
 
 #centre buttons
+tile_width = Ground.get_width()
 screen_width = screen.get_width()
 center_x = screen_width // 2
 
 Text_rect1= text1.get_rect(center=(center_x, 350))
 Text_rect2 = text2.get_rect(center=(center_x, 450))
+Ground_rect1 = Ground.get_rect(center=(tile_width // 2, 700))
+Ground_rect2 = Ground.get_rect(center=(tile_width // 2 + tile_width, 700))
+Ground_rect3 = Ground.get_rect(center=(tile_width // 2 + 2 * tile_width, 700))
 Home_image_rect = Home_image.get_rect()
 Home_image_rect.left = 5     # 20 pixels from left edge
 Home_image_rect.centery = screen.get_height() // 2
@@ -42,11 +48,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        if game_state == HOME:
-       
-        elif game_state == MAIN_MENU:
-            ..
-            
+        #if game_state == HOME:
+        #elif game_state == MAIN_MENU:
+        
+    
     text1 = font1.render("Welcome to Jarry's House", True, color)
     text2 = font2.render("Click anywhere to begin", True, color)
 
@@ -55,5 +60,8 @@ while running:
     screen.blit(text1,Text_rect1) 
     screen.blit(text2,Text_rect2) 
     screen.blit(Home_image, Home_image_rect)
+    screen.blit(Ground, Ground_rect1)
+    screen.blit(Ground, Ground_rect2)
+    screen.blit(Ground, Ground_rect3)
     pygame.display.update()
 pygame.quit()

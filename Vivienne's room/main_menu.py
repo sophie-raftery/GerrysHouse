@@ -11,9 +11,9 @@ fullscreen = False
 running = True
 
 #import
-Play_button = pygame.image.load(join("images", "play button.png")).convert_alpha()
-Setting_button = pygame.image.load(join("images", "setting button.png")).convert_alpha()
-Exit_button = pygame.image.load(join("images", "exit button.png")).convert_alpha()
+Play_button = pygame.image.load(join("images", "buttons", "play button.png")).convert_alpha()
+Setting_button = pygame.image.load(join("images", "buttons", "setting button.png")).convert_alpha()
+Exit_button = pygame.image.load(join("images", "buttons", "exit button.png")).convert_alpha()
 
 #centre buttons
 screen_width = screen.get_width()
@@ -42,7 +42,6 @@ while running:
                 pygame.quit()
     # Draw
     screen.fill((30, 30, 30))
-
     screen.blit(Play_button, Play_rect)
     screen.blit(Setting_button, Settings_rect)
     screen.blit(Exit_button, Exit_rect)
