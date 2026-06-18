@@ -8,28 +8,25 @@ import os
 from os.path import join
 from hotbar import Hotbar, Overlay, InventoryItem
 import minesweeper
+import shared_state
 
 DEBUG_COLLISIONS = False
  
 # ---------------------------------------------------------------------------
-# Collision rectangles — adjust to match the room image (1280x720)
+# Collision rectangles
 # ---------------------------------------------------------------------------
 _WALL_T = 40
 COLLISION_RECTS = [
-    # Border walls
-    pygame.Rect(0,  0, 1280, 250),  # top
-    pygame.Rect(0, 720 - _WALL_T,  1280, _WALL_T),  # bottom
-    pygame.Rect(0, 0,  _WALL_T, 720),     # left
-    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),     # right
-    # Furniture — tune x, y, w, h to fit the background image
-    pygame.Rect(0,   0,   300, 200),   # bed (top-left)
-    pygame.Rect(900, 0,   380, 180),   # desk/wardrobe (top-right)
-    pygame.Rect(500, 0,   200, 120),   # shelf / headboard (top-centre)
+    pygame.Rect(0,  0, 1280, 200),
+    pygame.Rect(0, 720 - _WALL_T,  1280, _WALL_T),
+    pygame.Rect(0, 0,  _WALL_T, 720),
+    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),
+    pygame.Rect(0,   0,   300, 200),
+    pygame.Rect(900, 0,   380, 180),
+    pygame.Rect(500, 0,   200, 120),
 ]
  
- 
 def resolve_collision(sprite):
-    """Push a sprite's rect out of all COLLISION_RECTS using AABB overlap."""
     for col_rect in COLLISION_RECTS:
         if not sprite.rect.colliderect(col_rect):
             continue
@@ -94,6 +91,110 @@ class InteractableBox:
             py = self.rect.top - 22
             surface.blit(lbl_shad, (px + 1, py + 1))
             surface.blit(lbl,      (px,     py))
+
+
+# ---------------------------------------------------------------------------
+# KeyBox  – one-time pickup that gives the player the key item
+# ---------------------------------------------------------------------------
+class KeyBox:
+    INTERACT_RADIUS = 90
+
+    def __init__(self, pos, key_item):
+        self.pos      = pygame.Vector2(pos)
+        self.key_item = key_item
+        self.taken    = False
+        self.show_prompt = False
+        self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
+        self.image.fill((200, 170, 30))
+        pygame.draw.rect(self.image, (140, 100, 10), self.image.get_rect(), 3)
+        pygame.draw.circle(self.image, (255, 240, 80), (20, 15), 7, 2)
+        pygame.draw.line(self.image, (255, 240, 80), (20, 22), (20, 32), 2)
+        pygame.draw.line(self.image, (255, 240, 80), (20, 28), (24, 28), 2)
+        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+        font = pygame.font.SysFont(None, 20)
+        self._prompt = font.render("[E] Take key", True, (255, 255, 255))
+        self._pshad  = font.render("[E] Take key", True, (0, 0, 0))
+        self._done   = font.render("Taken",        True, (180, 180, 180))
+        self._dshad  = font.render("Taken",        True, (0, 0, 0))
+
+    def update(self, player):
+        self.show_prompt = pygame.Vector2(player.rect.center).distance_to(self.pos) <= self.INTERACT_RADIUS
+
+    def try_take(self, hotbar):
+        if self.taken:
+            return False
+        if hotbar.add_item_first_free(self.key_item):
+            self.taken = True
+            return True
+        return False
+
+    def draw(self, surface):
+        if self.show_prompt:
+            glow = pygame.Surface((60, 60), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, (255, 255, 100, 70), glow.get_rect())
+            surface.blit(glow, glow.get_rect(center=self.rect.center))
+        surface.blit(self.image, self.rect)
+        if self.show_prompt:
+            lbl  = self._done  if self.taken else self._prompt
+            shad = self._dshad if self.taken else self._pshad
+            px = self.rect.centerx - lbl.get_width() // 2
+            py = self.rect.top - 22
+            surface.blit(shad, (px + 1, py + 1))
+            surface.blit(lbl,  (px,     py))
+
+
+# ---------------------------------------------------------------------------
+# ExitDoor  – requires a vinyl + key; returns to Test_level
+# ---------------------------------------------------------------------------
+class ExitDoor:
+    INTERACT_RADIUS = 80
+
+    def __init__(self, pos):
+        self.pos         = pygame.Vector2(pos)
+        self.show_prompt = False
+        self._unlocked   = False
+        self.image = pygame.Surface((44, 64), pygame.SRCALPHA)
+        self.image.fill((140, 90, 50, 230))
+        pygame.draw.rect(self.image, (80, 40, 10), self.image.get_rect(), 3)
+        pygame.draw.circle(self.image, (220, 180, 60), (34, 34), 5)
+        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+        font = pygame.font.SysFont(None, 20)
+        self._open_s  = font.render("[E] Exit",         True, (255, 255, 255))
+        self._open_sh = font.render("[E] Exit",         True, (0, 0, 0))
+        self._lock_s  = font.render("Need vinyl + key", True, (255, 120, 120))
+        self._lock_sh = font.render("Need vinyl + key", True, (0, 0, 0))
+
+    def _check(self, hotbar):
+        vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
+        hv = any(s and s.name in vinyl_names for s in hotbar.slots)
+        hk = any(s and s.name == "Room_Key"   for s in hotbar.slots)
+        return hv and hk
+
+    def update(self, player, hotbar):
+        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
+        self.show_prompt = dist <= self.INTERACT_RADIUS
+        self._unlocked   = self._check(hotbar)
+
+    def try_exit(self, hotbar):
+        return self._check(hotbar)
+
+    def draw(self, surface):
+        if self.show_prompt:
+            col  = (100, 255, 100, 70) if self._unlocked else (255, 100, 100, 70)
+            glow = pygame.Surface((70, 80), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, col, glow.get_rect())
+            surface.blit(glow, glow.get_rect(center=self.rect.center))
+        surface.blit(self.image, self.rect)
+        if self.show_prompt:
+            lbl  = self._open_s  if self._unlocked else self._lock_s
+            shad = self._open_sh if self._unlocked else self._lock_sh
+            px = self.rect.centerx - lbl.get_width() // 2
+            py = self.rect.top - 22
+            surface.blit(shad, (px + 1, py + 1))
+            surface.blit(lbl,  (px,     py))
+
+
+# Hotbar state is exported via shared_state.returned_hotbar_slots
 
 
 # ---------------------------------------------------------------------------
@@ -201,15 +302,16 @@ def run():
     mj_vinyl    = InventoryItem("MJ_Vinyl",    "Quest Item", "images/items/Vinyl_white.png")
     billy_vinyl = InventoryItem("Billy_Vinyl", "Quest Item", "images/items/Vinyl_yellow.png")
     katie_vinyl = InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png")
-    # Reward — pick one (change to whichever vinyl belongs to Gerry's room)
+    room_key    = InventoryItem("Room_Key",    "Key Item",   "images/Key.png")
     reward_vinyl = mj_vinyl
 
     # ---- Hotbar ------------------------------------------------------------
     overlay = Overlay(Player)
 
     # ---- World objects -----------------------------------------------------
-    # Place the box somewhere logical in the room — adjust pos as needed
     mystery_box = InteractableBox(pos=(640, 420))
+    key_box     = KeyBox(pos=(400, 500), key_item=room_key)
+    exit_door   = ExitDoor(pos=(640, 650))
 
     # ---- Sprites -----------------------------------------------------------
     all_sprites = pygame.sprite.Group()
@@ -222,6 +324,8 @@ def run():
         display_surface.blit(background, (0, 0))
         all_sprites.draw(display_surface)
         mystery_box.draw(display_surface)
+        key_box.draw(display_surface)
+        exit_door.draw(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
         pygame.display.update()
@@ -240,23 +344,54 @@ def run():
                 overlay.hotbar.handle_keypress(event)
 
                 if event.key == pygame.K_e:
-                    dist = pygame.Vector2(player.rect.center).distance_to(mystery_box.pos)
-                    if dist <= InteractableBox.INTERACT_RADIUS and not mystery_box.completed:
-                        # Launch minesweeper — freezes the level loop until done
+                    ppos = pygame.Vector2(player.rect.center)
+
+                    # Minesweeper box
+                    if ppos.distance_to(mystery_box.pos) <= InteractableBox.INTERACT_RADIUS and not mystery_box.completed:
                         won = minesweeper.run(
                             parent_surface = display_surface,
                             number_images  = number_images,
                         )
                         if won:
                             mystery_box.completed = True
-                            # Give the player the reward vinyl
                             overlay.hotbar.add_item_first_free(reward_vinyl)
 
+                    # Key box
+                    elif ppos.distance_to(key_box.pos) <= KeyBox.INTERACT_RADIUS:
+                        key_box.try_take(overlay.hotbar)
+
+                    # Exit door — needs vinyl + key
+                    elif ppos.distance_to(exit_door.pos) <= ExitDoor.INTERACT_RADIUS:
+                        if exit_door.try_exit(overlay.hotbar):
+                            # Fade out then hand control back to Test_level
+                            fade = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+                            fade.fill((0, 0, 0))
+                            for alpha in range(0, 256, 6):
+                                display_surface.blit(background, (0, 0))
+                                mystery_box.draw(display_surface)
+                                key_box.draw(display_surface)
+                                exit_door.draw(display_surface)
+                                all_sprites.draw(display_surface)
+                                overlay.display(display_surface)
+                                fade.set_alpha(alpha)
+                                display_surface.blit(fade, (0, 0))
+                                pygame.display.update()
+                                clock.tick(60)
+                            # Export hotbar so Test_level can restore it
+                            shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
+                            import sys
+                            sys.modules.pop('_next_level', None)
+                            return
+
         mystery_box.update(player)
+        key_box.update(player)
+        exit_door.update(player, overlay.hotbar)
         all_sprites.update(dt)
 
         display_surface.blit(background, (0, 0))
         mystery_box.draw(display_surface)
+        key_box.draw(display_surface)
+        exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
         overlay.display(display_surface)
         pygame.display.update()

@@ -526,7 +526,13 @@ while running:
 
                 if front_door.try_enter(player):
                     front_door.transition(display_surface)
+                    import shared_state
+                    shared_state.returned_hotbar_slots = None  # clear before entering
                     front_door.load_next_level()
+                    # Restore hotbar items the player brought back
+                    if shared_state.returned_hotbar_slots is not None:
+                        for i, item in enumerate(shared_state.returned_hotbar_slots):
+                            overlay.hotbar.slots[i] = item
                 elif mound_dist <= DirtMound.INTERACT_RADIUS:
                     dirt_mound.try_dig(overlay.hotbar)
                 elif bowl_dist <= DogBowl.INTERACT_RADIUS:
