@@ -5,9 +5,8 @@ from hotbar import Hotbar, Overlay, InventoryItem
 from door import Door
 
 
-# ---------------------------------------------------------------------------
+DEBUG_COLLISIONS = True
 # GroundItem – an item lying on the ground that the player can pick up
-# ---------------------------------------------------------------------------
 class GroundItem(pygame.sprite.Sprite):
     PICKUP_RADIUS = 80
 
@@ -290,10 +289,8 @@ class Dog(pygame.sprite.Sprite):
 
 
     def _point_in_obstacle(self, px, py):
-        for obj_mask, obj_pos in collision_masks:
-            lx, ly = int(px - obj_pos.x), int(py - obj_pos.y)
-            mw, mh = obj_mask.get_size()
-            if 0 <= lx < mw and 0 <= ly < mh and obj_mask.get_at((lx, ly)):
+        for col_rect in COLLISION_RECTS:
+            if col_rect.collidepoint(px, py):
                 return True
         return False
 
@@ -320,36 +317,7 @@ class Dog(pygame.sprite.Sprite):
         return steering.normalize() if steering.length() > 0 else goal_dir
 
     def _push_out_of_obstacles(self):
-        dog_mask    = pygame.mask.from_surface(self.image)
-        dog_topleft = pygame.Vector2(self.rect.topleft)
-        dw, dh = self.rect.width, self.rect.height
-        for obj_mask, obj_pos in collision_masks:
-            offset = (int(obj_pos.x - dog_topleft.x), int(obj_pos.y - dog_topleft.y))
-            if not dog_mask.overlap(obj_mask, offset):
-                continue
-            pushes = []
-            for dx in range(1, dw + 1):
-                tl = (int(dog_topleft.x) + dx, int(dog_topleft.y))
-                if not dog_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                    pushes.append((dx, 0)); break
-            for dx in range(1, dw + 1):
-                tl = (int(dog_topleft.x) - dx, int(dog_topleft.y))
-                if not dog_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                    pushes.append((-dx, 0)); break
-            for dy in range(1, dh + 1):
-                tl = (int(dog_topleft.x), int(dog_topleft.y) + dy)
-                if not dog_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                    pushes.append((0, dy)); break
-            for dy in range(1, dh + 1):
-                tl = (int(dog_topleft.x), int(dog_topleft.y) - dy)
-                if not dog_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                    pushes.append((0, -dy)); break
-            if pushes:
-                best = min(pushes, key=lambda v: abs(v[0]) + abs(v[1]))
-                self.rect.centerx += best[0]
-                self.rect.centery += best[1]
-                self.pos      = pygame.Vector2(self.rect.center)
-                dog_topleft   = pygame.Vector2(self.rect.topleft)
+        resolve_collision(self)
 
 
     def update(self, dt):
@@ -494,13 +462,44 @@ player = Player(all_sprites)
 dog    = Dog(all_sprites, player)
 
 
-# Collision masks
-# House: 450x450 at (850,5). Block top 350px so the front porch is walkable.
-_house_block = pygame.Surface((450, 350))
-_house_block.fill((1, 1, 1))
-house_mask_entry    = (pygame.mask.from_surface(_house_block), pygame.Vector2(850, 5))
-doghouse_mask_entry = (pygame.mask.from_surface(dog_house),    pygame.Vector2(100, 500))
-collision_masks = [house_mask_entry, doghouse_mask_entry]
+# ---------------------------------------------------------------------------
+# Collision rectangles (shared by player and dog)
+# ---------------------------------------------------------------------------
+DEBUG_COLLISIONS = False
+_WALL_T = 40
+
+COLLISION_RECTS = [
+    # Border walls
+    pygame.Rect(0,              0,    1280, _WALL_T),  # top
+    pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),  # bottom
+    pygame.Rect(0,              0,  _WALL_T, 720),     # left
+    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),     # right
+    # House — top 350px blocked, bottom 100px (porch) walkable
+    pygame.Rect(910, 5,   450, 350),
+    # Dog house
+    pygame.Rect(100, 500, 150, 150),
+]
+
+
+def resolve_collision(sprite):
+    """Push a sprite's rect out of all COLLISION_RECTS using AABB overlap."""
+    for col_rect in COLLISION_RECTS:
+        if not sprite.rect.colliderect(col_rect):
+            continue
+        ox = min(sprite.rect.right  - col_rect.left,
+                 col_rect.right - sprite.rect.left)
+        oy = min(sprite.rect.bottom - col_rect.top,
+                 col_rect.bottom - sprite.rect.top)
+        if ox < oy:
+            if sprite.rect.centerx < col_rect.centerx:
+                sprite.rect.right = col_rect.left
+            else:
+                sprite.rect.left  = col_rect.right
+        else:
+            if sprite.rect.centery < col_rect.centery:
+                sprite.rect.bottom = col_rect.top
+            else:
+                sprite.rect.top    = col_rect.bottom
 
 walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
 walk_sound.set_volume(0.9)
@@ -553,37 +552,12 @@ while running:
     dirt_mound.update(dt)
 
 
-    # Player collision push-out
-    player_mask    = pygame.mask.from_surface(player.image)
-    player_topleft = pygame.Vector2(player.rect.topleft)
-    pw, ph = int(player.rect.width), int(player.rect.height)
+    # Collision resolution
+    resolve_collision(player)
 
-    for obj_mask, obj_pos in collision_masks:
-        offset = (int(obj_pos.x - player_topleft.x), int(obj_pos.y - player_topleft.y))
-        if not player_mask.overlap(obj_mask, offset):
-            continue
-        pushes = []
-        for dx in range(1, pw + 1):
-            tl = (int(player_topleft.x) + dx, int(player_topleft.y))
-            if not player_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                pushes.append((dx, 0)); break
-        for dx in range(1, pw + 1):
-            tl = (int(player_topleft.x) - dx, int(player_topleft.y))
-            if not player_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                pushes.append((-dx, 0)); break
-        for dy in range(1, ph + 1):
-            tl = (int(player_topleft.x), int(player_topleft.y) + dy)
-            if not player_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                pushes.append((0, dy)); break
-        for dy in range(1, ph + 1):
-            tl = (int(player_topleft.x), int(player_topleft.y) - dy)
-            if not player_mask.overlap(obj_mask, (int(obj_pos.x - tl[0]), int(obj_pos.y - tl[1]))):
-                pushes.append((0, -dy)); break
-        if pushes:
-            best = min(pushes, key=lambda v: abs(v[0]) + abs(v[1]))
-            player.rect.centerx += best[0]
-            player.rect.centery += best[1]
-            player_topleft = pygame.Vector2(player.rect.topleft)
+    if DEBUG_COLLISIONS:
+        for col_rect in COLLISION_RECTS:
+            pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
 
     # Draw
     display_surface.blit(background_surf, (0, 0))
