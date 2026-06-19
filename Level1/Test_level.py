@@ -456,6 +456,14 @@ front_door = Door(
     size          = (40, 60),
 )
 
+# Vinyl door — requires a vinyl record; leads to winning screen
+vinyl_door = Door(
+    pos           = (200, 100),
+    target_module = "Vivienne's room/winning_screen1.py",
+    image_path    = None,
+    size          = (50, 70),
+)
+
 # Sprites
 all_sprites = pygame.sprite.Group()
 player = Player(all_sprites)
@@ -544,6 +552,18 @@ while running:
                         if shared_state.returned_hotbar_slots is not None:
                             for i, item in enumerate(shared_state.returned_hotbar_slots):
                                 overlay.hotbar.slots[i] = item
+                        # TODO: remove — spawn player at centre on return
+                        player.rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+                elif vinyl_door.try_enter(player):
+                    vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
+                    has_vinyl = any(s and s.name in vinyl_names for s in overlay.hotbar.slots)
+                    if has_vinyl:
+                        vinyl_door.transition(display_surface)
+                        walk_sound.stop()
+                        vinyl_door.load_next_level()
+                    else:
+                        _msg_text  = "You need a vinyl record!"
+                        _msg_timer = pygame.time.get_ticks()
                 elif mound_dist <= DirtMound.INTERACT_RADIUS:
                     dirt_mound.try_dig(overlay.hotbar)
                 elif bowl_dist <= DogBowl.INTERACT_RADIUS:
@@ -563,6 +583,7 @@ while running:
     dog_bowl.show_prompt   = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)   <= DogBowl.INTERACT_RADIUS
     dirt_mound.show_prompt = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos) <= DirtMound.INTERACT_RADIUS
     front_door.update(player)
+    vinyl_door.update(player)
 
     all_sprites.update(dt)
     ground_items_group.update(dt)
@@ -589,6 +610,7 @@ while running:
     dirt_mound.draw(display_surface)
     dog_bowl.draw(display_surface, dog._at_bowl)
     front_door.draw(display_surface)
+    vinyl_door.draw(display_surface)
 
     # Draw timed block message near the front door
     if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
