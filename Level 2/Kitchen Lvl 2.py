@@ -188,8 +188,7 @@ def run(incoming_hotbar_slots=None):
         pos           = (640, 650),
         target_module = "Level 2/Lvl 2.py",
         image_path    = None,
-        size          = (55, 66),
-    )
+        size          = (55, 66),)
 
     # Sprites
     all_sprites = pygame.sprite.Group()
@@ -239,3 +238,4 @@ def run(incoming_hotbar_slots=None):
         pygame.display.update()
 
     pygame.quit()
+#sdegfefafe
