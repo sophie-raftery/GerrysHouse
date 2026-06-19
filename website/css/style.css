@@ -9,20 +9,24 @@
    CSS CUSTOM PROPERTIES
    ============================================ */
 :root {
-  --bg: #1a1a2e;
-  --bg-card: #16213e;
-  --bg-panel: #0f3460;
+  --bg: #f8f3e9; 
+  --bg-card: #fff8ee;
+  --bg-panel: #efe4d1;
+
   --accent-gold: #fdcb6e;
   --accent-blue: #74b9ff;
-  --accent-green: #00b894;
-  --accent-orange: #e17055;
-  --accent-pink: #fd79a8;
-  --accent-purple: #a29bfe;
-  --accent-red: #d63031;
-  --text: #e8e8e8;
-  --text-muted: #a0a0c0;
-  --pixel-border: 3px solid #fdcb6e;
-  --pixel-shadow: 4px 4px 0px #000;
+  --accent-green: #7fb069;
+  --accent-orange: #e89b5d;
+  --accent-pink: #e8a8b8;
+  --accent-purple: #b8a1d9;
+  --accent-red: #c96a5b;
+
+  --text: #4a3f35;
+  --text-muted: #7a6f65;
+
+  --pixel-border: 3px solid #d9a441;
+  --pixel-shadow: 4px 4px 0px #8b6b4a;
+
   --transition-fast: 0.1s ease;
   --transition-med: 0.2s ease;
 }
@@ -30,6 +34,7 @@
 /* ============================================
    RESET & BASE
    ============================================ */
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -44,15 +49,15 @@ html {
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: system-ui, 'Inter', sans-serif;
+  font-family:'Inter', sans-serif;
   line-height: 1.7;
-  overflow-x: hidden;
-  opacity: 0;
-  animation: pageFadeIn 0.6s ease forwards;
+  overflow-x: hidden; /* prevents accidental sideways scrolling if animated elements move off the screen*/
+  opacity: 0; /* page starts invisible. then animation runs. */
+  animation: pageFadeIn 0.6s ease forwards; /* page starts invisible. then animation runs. */
 }
 
 @keyframes pageFadeIn {
-  to { opacity: 1; }
+  to { opacity: 1; } /*opacity goes from 0 to 1 in the span of 0.6 seconds. */
 }
 
 a {
@@ -65,18 +70,18 @@ a:hover {
 }
 
 img {
-  max-width: 100%;
-  display: block;
+  max-width: 100%; /* prevents images from overflowing their containers */
+  display: block; /* prevents extra space below images due to baseline alignment */
 }
 
 ul {
   list-style: none;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+.container { /* to center content */
+  max-width: 1200px; /* content never grows wider than 1200px. */
+  margin: 0 auto; /* centers the container horizontally */
+  padding: 0 1.5rem; /* Prevents content from touching screen edges. */
 }
 
 section {
@@ -90,20 +95,20 @@ section {
   font-family: 'Press Start 2P', monospace;
 }
 
-.section-title {
+.section-title { /* used for major headings */
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-size: clamp(1rem, 2.5vw, 1.5rem); /* font size scales with viewport width, but stays between 1rem and 1.5rem */
   color: var(--accent-gold);
-  text-align: center;
+  text-align: center; 
   margin-bottom: 2.5rem;
-  text-shadow: 3px 3px 0 #000;
+  text-shadow: 3px 3px 0 #000; /* box shadow */
   line-height: 1.6;
 }
 
 .section-subtitle {
   text-align: center;
   color: var(--text-muted);
-  margin-top: -1.5rem;
+  margin-top: -1.5rem; /* pulls subtitle closer to title */
   margin-bottom: 2.5rem;
   font-size: 0.95rem;
 }
@@ -125,17 +130,17 @@ section {
   text-decoration: none;
   letter-spacing: 0.05em;
   line-height: 1.4;
-  position: relative;
+  position: relative; /* for pseudo-elements if needed */
 }
 
 .btn-pixel:hover {
-  transform: translateY(2px);
+  transform: translateY(2px); /* moves button down slightly on hover */
   box-shadow: 2px 2px 0 #000;
   text-decoration: none;
 }
 
 .btn-pixel:active {
-  transform: translateY(4px);
+  transform: translateY(4px); /* moves button down further when clicked */
   box-shadow: 0 0 0 #000;
 }
 
@@ -225,15 +230,15 @@ section {
    ============================================ */
 .navbar {
   position: sticky;
-  top: 0;
-  z-index: 1000;
+  top: 0; /* sticks to the top of the viewport */
+  z-index: 1000; /* ensures navbar stays on top of other content */
   background: var(--bg);
   border-bottom: 3px solid var(--accent-gold);
   box-shadow: 0 3px 0 #000;
 }
 
 .navbar__inner {
-  display: flex;
+  display: flex; 
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
@@ -300,8 +305,9 @@ section {
   transition: transform 0.2s, opacity 0.2s;
 }
 
+/* this isnt necessary at all */
 .navbar__hamburger.open span:nth-child(1) {
-  transform: translateY(8px) rotate(45deg);
+  transform: translateY(8px) rotate(45deg); /* turns the = hamburger ui into \ */
 }
 .navbar__hamburger.open span:nth-child(2) {
   opacity: 0;
@@ -309,9 +315,10 @@ section {
 .navbar__hamburger.open span:nth-child(3) {
   transform: translateY(-8px) rotate(-45deg);
 }
+/* */
 
 /* Mobile nav */
-@media (max-width: 768px) {
+@media (max-width: 768px) { 
   .navbar__hamburger {
     display: flex;
   }
@@ -320,7 +327,7 @@ section {
     display: none;
     flex-direction: column;
     position: absolute;
-    top: 100%;
+    top: 100%; 
     left: 0;
     right: 0;
     background: var(--bg);
@@ -331,7 +338,7 @@ section {
   }
 
   .navbar__links.open {
-    display: flex;
+    display: flex; /* shows the links when hamburger is clicked */
   }
 
   .navbar__links a {
@@ -399,75 +406,60 @@ section {
   font-size: 2rem;
   display: block;
   margin: 1rem auto;
-  animation: fishSwim 3s ease-in-out infinite;
+  animation: fishSwim 3s ease-in-out infinite; /* makes the fish move left and right */
 }
 
 @keyframes fishSwim {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(15px); }
+  0%, 100% { transform: translateX(0); } /* fish starts at original position */
+  50% { transform: translateX(15px); } /* fish moves 15px to the right at the midpoint of the animation */
 }
 
 /* ============================================
    ANIMATED PIXEL BACKGROUND
    ============================================ */
 .pixel-bg {
-  position: relative;
+  position: relative; 
   overflow: hidden;
-}
-
-/* Stars */
-.star {
-  position: absolute;
-  border-radius: 50%;
-  background: #fff;
-  animation: twinkle var(--dur, 2s) ease-in-out infinite var(--delay, 0s);
-  pointer-events: none;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.2; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.4); }
-}
-
-/* Pixel clouds */
-.pixel-cloud {
-  position: absolute;
-  background: rgba(116, 185, 255, 0.15);
-  border: 2px solid rgba(116, 185, 255, 0.3);
-  border-radius: 0;
-  pointer-events: none;
-  animation: cloudFloat var(--dur, 20s) linear infinite var(--delay, 0s);
-}
-
-@keyframes cloudFloat {
-  from { transform: translateX(-200px); }
-  to { transform: translateX(calc(100vw + 200px)); }
 }
 
 /* ============================================
    HERO SECTION
    ============================================ */
 .hero {
-  min-height: 100vh;
+  min-height: 100vh; /* Make the hero at least as tall as the screen. (view-height) */
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  position: relative; /* normal position in the document flow, enabling adjustments without affecting the layout of surrounding elements. */
+  background-image: url("/website/images/websiteBackground.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   overflow: hidden;
   text-align: center;
   padding: 6rem 1.5rem 4rem;
 }
 
 .hero__content {
-  position: relative;
+  position: relative; /* normal position in the document flow, enabling adjustments without affecting the layout of surrounding elements. */
   z-index: 2;
+  /*
+  Controls stacking order.
+  Higher number means closer to the viewer.
+  z-index: 2;
+  means:
+
+  Background     z=0
+  Decorations    z=1
+  Text           z=2
+
+  Text stays above decorations.
+  */
   max-width: 800px;
 }
 
 .hero__title {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(1.2rem, 4vw, 2.5rem);
   color: var(--accent-gold);
   text-shadow: 4px 4px 0 #000, 0 0 30px rgba(253, 203, 110, 0.4);
   line-height: 1.6;
@@ -530,19 +522,19 @@ section {
 
 /* Animated characters in hero */
 .hero__fish {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: absolute; /* you can place it wherever you want */
+  bottom: 80px; 
+  left: 50%; /* moves the fish halfway across the container */
+  transform: translateX(-50%); /* moves it left by half its own width. */
   font-size: 2.5rem;
   animation: fishBob 2s ease-in-out infinite;
-  z-index: 2;
+  z-index: 2; /* controls the layering */
   pointer-events: none;
 }
 
-@keyframes fishBob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-12px); }
+@keyframes fishBob { /* Keyframes define how the animation changes over time. */
+  0%, 100% { transform: translateX(-50%) translateY(0); } /* the 0, 100 % At the start and end theres no vertical movement. */
+  50% { transform: translateX(-50%) translateY(-12px); } /* Halfway through , Fish moves up 12 pixels. */
 }
 
 .hero__dog {
@@ -555,9 +547,9 @@ section {
   pointer-events: none;
 }
 
-@keyframes dogWag {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
+@keyframes dogWag { /* Keyframes define how the animation changes over time. */
+  0%, 100% { transform: rotate(-5deg); } /* the 0, 100 % At the start and end theres no rotating movement. */
+  50% { transform: rotate(5deg); } /* Halfway through , Dog rotates 5 degrees. */
 }
 
 /* Pixel house deco */
@@ -721,17 +713,6 @@ section {
   color: var(--text-muted);
   margin-bottom: 1.25rem;
   line-height: 1.6;
-}
-
-.mission-card--final {
-  border-color: var(--accent-red);
-  background: linear-gradient(135deg, #16213e, #2d0a0a);
-}
-.mission-card--final .mission-card__title {
-  color: var(--accent-red);
-}
-.mission-card--final:hover {
-  box-shadow: 10px 10px 0 var(--accent-red);
 }
 
 @media (max-width: 1024px) {
@@ -1082,7 +1063,7 @@ section {
   font-size: 0.6rem;
   color: var(--text);
   margin-bottom: 0.75rem;
-  text-shadow: 2px 2px 0 #000;
+  text-shadow: 2px 2px 0 #8b6b4a;
   line-height: 1.5;
 }
 
@@ -1148,27 +1129,6 @@ section {
   line-height: 1.7;
   margin-bottom: 1rem;
   font-style: italic;
-}
-
-.team-card__socials {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.team-card__socials a {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.4rem;
-  color: var(--text-muted);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  padding: 4px 8px;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.team-card__socials a:hover {
-  color: var(--accent-gold);
-  border-color: var(--accent-gold);
-  text-decoration: none;
 }
 
 @media (max-width: 768px) {

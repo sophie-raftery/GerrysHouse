@@ -7,13 +7,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ============================================
-  // 1. SET FOOTER YEAR AUTOMATICALLY
+  // 1. DISPLAY CURRENT YEAR
   // ============================================
-  const yearEls = document.querySelectorAll('.js-year');
-  const currentYear = new Date().getFullYear();
-  yearEls.forEach(el => {
-    el.textContent = currentYear;
-  });
+  // i removed the JavaScript for 1. because it was super uncesccesary.
 
   // ============================================
   // 2. MOBILE NAV HAMBURGER TOGGLE
