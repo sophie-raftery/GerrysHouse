@@ -1,5 +1,6 @@
 import pygame
 from os.path import join
+pygame.init()
 
 #general set up
 pygame.init()
@@ -11,21 +12,22 @@ fullscreen = False
 running = True
 clock = pygame.time.Clock()
 
-
+# Audio
+pygame.mixer.init()
+Micheal_Jackson_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "bad.mp3"))
+Micheal_Jackson_sound.set_volume(9.0)
+# Play forever
+Micheal_Jackson_sound.play(loops=-1)
 #import
 Sprite = pygame.image.load(join("images", "Player_sprites", "sprite_win.png"))
 Vinyl = pygame.image.load(join("images", "items", "vinyl_white.png")).convert_alpha()
+Back_arrow = pygame.image.load(join("images", "buttons", "back arrow.png"))
+Forward_arrow = pygame.image.load(join("images", "buttons", "forward arrow.png"))
+
 Quaver_pink = pygame.image.load(join("images", "musical_notes", "2quavers_pink.png"))
 Quaver_purple = pygame.image.load(join("images", "musical_notes", "quaver_purple.png"))
 Quaver_black = pygame.image.load(join("images", "musical_notes", "quaver_black.png"))
 Triplet_red = pygame.image.load(join("images", "musical_notes", "triplet_red.png"))
-
-
-#Micheal_Jackson_sound = pygame.mixer.Sound(join("Daniel's Room"/"Audios" "Michael_Jackson-Bad.mp3"))
-
-# use music system for mp3
-#pygame.mixer.music.load(join("Daniel's Room", "Audios", "Michael_Jackson-Bad.mp3"))
-#pygame.mixer.music.play(-1)  # -1 = loop forever
 
 # Scaling sprtie down size
 sprite_size = (300, 570)  # width, height
@@ -52,15 +54,21 @@ Quaver_pink_rect  = Quaver_pink.get_rect(center=(center_x,70))
 Quaver_purple_rect = Quaver_pink.get_rect(center=(center_x-110, 110))
 Quaver_black_rect = Quaver_pink.get_rect(center=(center_x+110,110))
 Triplet_red_rect = Quaver_pink.get_rect(center=(center_x-110, 230))
+Back_arrow_rect = Back_arrow.get_rect(center=(550, 650))
+Forward_arrow_rect = Forward_arrow.get_rect(center=(720, 650))
+
 
 #Rotating Vinyl 
 angle = 0
 
 # Main loop
 while running:
+    music_started = False
+    if not music_started:
+        Micheal_Jackson_sound.play(loops=-1)
+        music_started = True
 
     for event in pygame.event.get():
-
         if event.type == pygame.QUIT:
             running = False
     angle = (angle + 1) % 360
@@ -76,9 +84,11 @@ while running:
     screen.blit(Quaver_purple, Quaver_purple_rect)
     screen.blit(Quaver_black, Quaver_black_rect)
     screen.blit(Triplet_red, Triplet_red_rect)
+    screen.blit(Back_arrow, Back_arrow_rect)
+    screen.blit(Forward_arrow, Forward_arrow_rect)
 
     
-    
+    Micheal_Jackson_sound.stop()
     pygame.display.update()
     clock.tick(60)
 pygame.quit()
