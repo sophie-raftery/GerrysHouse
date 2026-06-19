@@ -7,6 +7,7 @@ import pygame
 import os
 from os.path import join
 from hotbar import Hotbar, Overlay, InventoryItem
+from door import Door
 import minesweeper
 import shared_state
 
@@ -138,57 +139,6 @@ class MakeBed:
             surface.blit(shad, (px + 1, py + 1))
             surface.blit(lbl,  (px,     py))
 
-# ---------------------------------------------------------------------------
-# ExitDoor  – requires a vinyl + key; returns to Test_level
-# ---------------------------------------------------------------------------
-class ExitDoor:
-    INTERACT_RADIUS = 180
-
-    def __init__(self, pos):
-        self.pos         = pygame.Vector2(pos)
-        self.show_prompt = False
-        self._unlocked   = False
-        self.image = pygame.Surface((200, 120), pygame.SRCALPHA)
-        self.image.fill((140, 90, 50, 230))
-        pygame.draw.rect(self.image, (80, 80, 10), self.image.get_rect(), 3)
-        pygame.draw.circle(self.image, (220, 180, 60), (34, 34), 5)
-        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-        font = pygame.font.SysFont(None, 20)
-        self._open_s  = font.render("[E] Exit",         True, (255, 255, 255))
-        self._open_sh = font.render("[E] Exit",         True, (0, 0, 0))
-        self._lock_s  = font.render("Need vinyl + key", True, (255, 120, 120))
-        self._lock_sh = font.render("Need vinyl + key", True, (0, 0, 0))
-
-    def _check(self, hotbar):
-        vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
-        hv = any(s and s.name in vinyl_names for s in hotbar.slots)
-        hk = any(s and s.name == "Room_Key"   for s in hotbar.slots)
-        return hv and hk
-
-    def update(self, player, hotbar):
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        self.show_prompt = dist <= self.INTERACT_RADIUS
-        self._unlocked   = self._check(hotbar)
-
-    def try_exit(self, hotbar):
-        return self._check(hotbar)
-
-    def draw(self, surface):
-        if self.show_prompt:
-            col  = (100, 255, 100, 70) if self._unlocked else (255, 100, 100, 70)
-            glow = pygame.Surface((70, 80), pygame.SRCALPHA)
-            pygame.draw.ellipse(glow, col, glow.get_rect())
-            surface.blit(glow, glow.get_rect(center=self.rect.center))
-        # Door image intentionally not drawn — invisible but hitbox is still active
-        if self.show_prompt:
-            lbl  = self._open_s  if self._unlocked else self._lock_s
-            shad = self._open_sh if self._unlocked else self._lock_sh
-            px = self.rect.centerx - lbl.get_width() // 2
-            py = self.rect.top - 22
-            surface.blit(shad, (px + 1, py + 1))
-            surface.blit(lbl,  (px,     py))
-
-
 # Hotbar state is exported via shared_state.returned_hotbar_slots
 
 
@@ -309,8 +259,30 @@ def run():
     overlay = Overlay(Player)
 
     # ---- World objects -----------------------------------------------------
-    key_box   = InteractableBox(pos=(190, 230))   # top-left box gives the key
-    exit_door = ExitDoor(pos=(770, 140))           # upper-middle of the room
+    _VINYL_NAMES = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
+
+    def _can_exit(hotbar):
+        hv = any(s and s.name in _VINYL_NAMES for s in hotbar.slots)
+        hk = any(s and s.name == "Room_Key"   for s in hotbar.slots)
+        return hv and hk
+
+    key_box   = InteractableBox(pos=(190, 230))
+    exit_door = Door(
+        pos           = (770, 140),
+        target_module = "Level1/Test_level.py",
+        image_path    = None,
+        size          = (200, 120),
+        interact_radius = 180,
+    )
+    # Make the door invisible — hitbox is still active via exit_door.rect
+    exit_door.image = pygame.Surface((200, 120), pygame.SRCALPHA)
+
+    # Custom prompt surfaces (override Door's default "[E] Enter")
+    _door_font    = pygame.font.SysFont(None, 20)
+    _prompt_open  = _door_font.render("[E] Exit",         True, (255, 255, 255))
+    _prompt_open_sh = _door_font.render("[E] Exit",       True, (0,   0,   0))
+    _prompt_lock  = _door_font.render("Need vinyl + key", True, (255, 120, 120))
+    _prompt_lock_sh = _door_font.render("Need vinyl + key", True, (0,  0,   0))
 
     # ---- Sprites -----------------------------------------------------------
     all_sprites = pygame.sprite.Group()
@@ -324,7 +296,6 @@ def run():
         make_bed.draw(display_surface)
         key_box.draw(display_surface)
         all_sprites.draw(display_surface)
-        exit_door.draw(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
         pygame.display.update()
@@ -361,37 +332,36 @@ def run():
                         overlay.hotbar.add_item_first_free(room_key)
 
                     # Exit door — needs vinyl + key
-                    elif ppos.distance_to(exit_door.pos) <= ExitDoor.INTERACT_RADIUS:
-                        if exit_door.try_exit(overlay.hotbar):
-                            # Fade out then hand control back to Test_level
-                            fade = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
-                            fade.fill((0, 0, 0))
-                            for alpha in range(0, 256, 6):
-                                display_surface.blit(background, (0, 0))
-                                make_bed.draw(display_surface)
-                                key_box.draw(display_surface)
-                                exit_door.draw(display_surface)
-                                all_sprites.draw(display_surface)
-                                overlay.display(display_surface)
-                                fade.set_alpha(alpha)
-                                display_surface.blit(fade, (0, 0))
-                                pygame.display.update()
-                                clock.tick(60)
-                            # Export hotbar so Test_level can restore it
+                    elif exit_door.try_enter(player):
+                        if _can_exit(overlay.hotbar):
                             shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
+                            exit_door.transition(display_surface)
                             import sys
                             sys.modules.pop('_next_level', None)
+                            exit_door.load_next_level()
                             return
 
         make_bed.update(player)
         key_box.update(player)
-        exit_door.update(player, overlay.hotbar)
+        exit_door.update(player)
         all_sprites.update(dt)
 
         display_surface.blit(background, (0, 0))
         make_bed.draw(display_surface)
         key_box.draw(display_surface)
-        exit_door.draw(display_surface)
+        # Exit door: invisible body, custom locked/unlocked prompt
+        if exit_door.show_prompt:
+            unlocked = _can_exit(overlay.hotbar)
+            col  = (100, 255, 100, 70) if unlocked else (255, 100, 100, 70)
+            glow = pygame.Surface((70, 80), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, col, glow.get_rect())
+            display_surface.blit(glow, glow.get_rect(center=exit_door.rect.center))
+            lbl  = _prompt_open    if unlocked else _prompt_lock
+            shad = _prompt_open_sh if unlocked else _prompt_lock_sh
+            px = exit_door.rect.centerx - lbl.get_width() // 2
+            py = exit_door.rect.top - 22
+            display_surface.blit(shad, (px + 1, py + 1))
+            display_surface.blit(lbl,  (px,     py))
         all_sprites.draw(display_surface)
         overlay.display(display_surface)
         pygame.display.update()
