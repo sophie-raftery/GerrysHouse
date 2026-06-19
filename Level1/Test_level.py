@@ -510,7 +510,7 @@ def resolve_collision(sprite):
                 sprite.rect.top    = col_rect.bottom
 
 walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-walk_sound.set_volume(0.9)
+walk_sound.set_volume(0.1)
 
 clock   = pygame.time.Clock()
 running = True
