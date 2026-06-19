@@ -216,7 +216,7 @@ def run(incoming_hotbar_slots=None):
     player = Player(all_sprites)
 
     walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-    walk_sound.set_volume(0.9)
+    walk_sound.set_volume(0.1)
 
     # Fade in
     fade_surf = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
