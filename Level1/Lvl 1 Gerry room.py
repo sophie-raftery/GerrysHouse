@@ -10,8 +10,9 @@ from hotbar import Hotbar, Overlay, InventoryItem
 import minesweeper
 import shared_state
 
+
 DEBUG_COLLISIONS = False
- 
+walk_sound.stop()
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
@@ -47,36 +48,36 @@ def resolve_collision(sprite):
 
 
 # ---------------------------------------------------------------------------
-# InteractableBox  – a chest/box that launches the minesweeper mini-game
+# ---------------------------------------------------------------------------
+# InteractableBox  – a box that launches the minesweeper mini-game
 # ---------------------------------------------------------------------------
 class InteractableBox:
     INTERACT_RADIUS = 90
 
     def __init__(self, pos):
-        self.pos         = pygame.Vector2(pos)
-        self.completed   = False   # True once the player wins the game
+        self.pos       = pygame.Vector2(pos)
+        self.completed = False
         self.show_prompt = False
 
-        # Box sprite — coloured placeholder until you add a real image
         self.image = pygame.Surface((48, 48), pygame.SRCALPHA)
         self.image.fill((160, 110, 50))
         pygame.draw.rect(self.image, (100, 60, 20), self.image.get_rect(), 3)
-        # Little lock icon
         pygame.draw.rect(self.image, (220, 180, 60), (18, 22, 12, 10))
         pygame.draw.arc(self.image, (220, 180, 60),
                         pygame.Rect(18, 15, 12, 14), 0, 3.14159, 3)
-
         self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
 
         font = pygame.font.SysFont(None, 20)
-        self._prompt      = font.render("[E] Open", True, (255, 255, 255))
-        self._prompt_shad = font.render("[E] Open", True, (0, 0, 0))
-        self._done        = font.render("Cleared!", True, (120, 255, 120))
-        self._done_shad   = font.render("Cleared!", True, (0, 0, 0))
+        self._prompt      = font.render("[E] Open",  True, (255, 255, 255))
+        self._prompt_shad = font.render("[E] Open",  True, (0, 0, 0))
+        self._done        = font.render("Cleared!",  True, (120, 255, 120))
+        self._done_shad   = font.render("Cleared!",  True, (0, 0, 0))
 
     def update(self, player):
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        self.show_prompt = dist <= self.INTERACT_RADIUS
+        self.show_prompt = (
+            pygame.Vector2(player.rect.center).distance_to(self.pos) <= self.INTERACT_RADIUS
+            and not self.completed
+        )
 
     def draw(self, surface):
         if self.show_prompt:
@@ -85,58 +86,8 @@ class InteractableBox:
             surface.blit(glow, glow.get_rect(center=self.rect.center))
         surface.blit(self.image, self.rect)
         if self.show_prompt:
-            lbl      = self._done      if self.completed else self._prompt
-            lbl_shad = self._done_shad if self.completed else self._prompt_shad
-            px = self.rect.centerx - lbl.get_width() // 2
-            py = self.rect.top - 22
-            surface.blit(lbl_shad, (px + 1, py + 1))
-            surface.blit(lbl,      (px,     py))
-
-
-# ---------------------------------------------------------------------------
-# KeyBox  – one-time pickup that gives the player the key item
-# ---------------------------------------------------------------------------
-class KeyBox:
-    INTERACT_RADIUS = 90
-
-    def __init__(self, pos, key_item):
-        self.pos      = pygame.Vector2(pos)
-        self.key_item = key_item
-        self.taken    = False
-        self.show_prompt = False
-        self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
-        self.image.fill((200, 170, 30))
-        pygame.draw.rect(self.image, (140, 100, 10), self.image.get_rect(), 3)
-        pygame.draw.circle(self.image, (255, 240, 80), (20, 15), 7, 2)
-        pygame.draw.line(self.image, (255, 240, 80), (20, 22), (20, 32), 2)
-        pygame.draw.line(self.image, (255, 240, 80), (20, 28), (24, 28), 2)
-        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-        font = pygame.font.SysFont(None, 20)
-        self._prompt = font.render("[E] Take key", True, (255, 255, 255))
-        self._pshad  = font.render("[E] Take key", True, (0, 0, 0))
-        self._done   = font.render("Taken",        True, (180, 180, 180))
-        self._dshad  = font.render("Taken",        True, (0, 0, 0))
-
-    def update(self, player):
-        self.show_prompt = pygame.Vector2(player.rect.center).distance_to(self.pos) <= self.INTERACT_RADIUS
-
-    def try_take(self, hotbar):
-        if self.taken:
-            return False
-        if hotbar.add_item_first_free(self.key_item):
-            self.taken = True
-            return True
-        return False
-
-    def draw(self, surface):
-        if self.show_prompt:
-            glow = pygame.Surface((60, 60), pygame.SRCALPHA)
-            pygame.draw.ellipse(glow, (255, 255, 100, 70), glow.get_rect())
-            surface.blit(glow, glow.get_rect(center=self.rect.center))
-        surface.blit(self.image, self.rect)
-        if self.show_prompt:
-            lbl  = self._done  if self.taken else self._prompt
-            shad = self._dshad if self.taken else self._pshad
+            lbl  = self._done      if self.completed else self._prompt
+            shad = self._done_shad if self.completed else self._prompt_shad
             px = self.rect.centerx - lbl.get_width() // 2
             py = self.rect.top - 22
             surface.blit(shad, (px + 1, py + 1))
@@ -144,18 +95,64 @@ class KeyBox:
 
 
 # ---------------------------------------------------------------------------
+# MakeBed  – shows messy_bed, launches minesweeper on [E], swaps to clean bed
+# ---------------------------------------------------------------------------
+class MakeBed:
+    INTERACT_RADIUS = 110
+
+    def __init__(self, pos, size=(220, 160)):
+        self.pos       = pygame.Vector2(pos)
+        self.made      = False
+        self.show_prompt = False
+
+        raw_messy = pygame.image.load("images/messy_bed.png").convert_alpha()
+        raw_clean = pygame.image.load("images/bed.png").convert_alpha()
+        self._messy_img = pygame.transform.scale(raw_messy, size)
+        self._clean_img = pygame.transform.scale(raw_clean, size)
+
+        self.rect = self._messy_img.get_rect(topleft=(int(self.pos.x), int(self.pos.y)))
+
+        font = pygame.font.SysFont(None, 20)
+        self._prompt      = font.render("[E] Make bed",  True, (255, 255, 255))
+        self._prompt_shad = font.render("[E] Make bed",  True, (0, 0, 0))
+        self._done        = font.render("Bed made!",     True, (120, 255, 120))
+        self._done_shad   = font.render("Bed made!",     True, (0, 0, 0))
+
+    @property
+    def image(self):
+        return self._clean_img if self.made else self._messy_img
+
+    def update(self, player):
+        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
+        self.show_prompt = dist <= self.INTERACT_RADIUS and not self.made
+
+    def draw(self, surface):
+        if self.show_prompt:
+            glow = pygame.Surface((self.rect.width + 30, self.rect.height + 30), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, (255, 220, 100, 60), glow.get_rect())
+            surface.blit(glow, glow.get_rect(center=self.rect.center))
+        surface.blit(self.image, self.rect)
+        if self.show_prompt:
+            lbl  = self._done      if self.made else self._prompt
+            shad = self._done_shad if self.made else self._prompt_shad
+            px = self.rect.centerx - lbl.get_width() // 2
+            py = self.rect.top - 22
+            surface.blit(shad, (px + 1, py + 1))
+            surface.blit(lbl,  (px,     py))
+
+# ---------------------------------------------------------------------------
 # ExitDoor  – requires a vinyl + key; returns to Test_level
 # ---------------------------------------------------------------------------
 class ExitDoor:
-    INTERACT_RADIUS = 80
+    INTERACT_RADIUS = 180
 
     def __init__(self, pos):
         self.pos         = pygame.Vector2(pos)
         self.show_prompt = False
         self._unlocked   = False
-        self.image = pygame.Surface((44, 64), pygame.SRCALPHA)
+        self.image = pygame.Surface((200, 120), pygame.SRCALPHA)
         self.image.fill((140, 90, 50, 230))
-        pygame.draw.rect(self.image, (80, 40, 10), self.image.get_rect(), 3)
+        pygame.draw.rect(self.image, (80, 80, 10), self.image.get_rect(), 3)
         pygame.draw.circle(self.image, (220, 180, 60), (34, 34), 5)
         self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
         font = pygame.font.SysFont(None, 20)
@@ -184,7 +181,7 @@ class ExitDoor:
             glow = pygame.Surface((70, 80), pygame.SRCALPHA)
             pygame.draw.ellipse(glow, col, glow.get_rect())
             surface.blit(glow, glow.get_rect(center=self.rect.center))
-        surface.blit(self.image, self.rect)
+        # Door image intentionally not drawn — invisible but hitbox is still active
         if self.show_prompt:
             lbl  = self._open_s  if self._unlocked else self._lock_s
             shad = self._open_sh if self._unlocked else self._lock_sh
@@ -277,6 +274,11 @@ def run():
         pygame.image.load("images/Gerry's room.png").convert(),
         (WINDOW_WIDTH, WINDOW_HEIGHT))
 
+    # ---- Bed (messy → clean via minesweeper) --------------------------------
+    make_bed = MakeBed(pos=(1000, 200), size=(220, 160))
+    # Collision only covers the bottom 60px of the bed (footboard area)
+    COLLISION_RECTS.append(pygame.Rect(1060, 200, 100, 60))
+
     # ---- Player walk animations --------------------------------------------
     walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 1.5) for i in range(1, 5)]
     walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 1.5) for i in range(1, 5)]
@@ -309,9 +311,8 @@ def run():
     overlay = Overlay(Player)
 
     # ---- World objects -----------------------------------------------------
-    mystery_box = InteractableBox(pos=(640, 420))
-    key_box     = KeyBox(pos=(400, 500), key_item=room_key)
-    exit_door   = ExitDoor(pos=(640, 650))
+    key_box   = InteractableBox(pos=(190, 230))   # top-left box gives the key
+    exit_door = ExitDoor(pos=(770, 140))           # upper-middle of the room
 
     # ---- Sprites -----------------------------------------------------------
     all_sprites = pygame.sprite.Group()
@@ -322,9 +323,9 @@ def run():
     fade_surf.fill((0, 0, 0))
     for alpha in range(255, -1, -6):
         display_surface.blit(background, (0, 0))
-        all_sprites.draw(display_surface)
-        mystery_box.draw(display_surface)
+        make_bed.draw(display_surface)
         key_box.draw(display_surface)
+        all_sprites.draw(display_surface)
         exit_door.draw(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
@@ -346,19 +347,25 @@ def run():
                 if event.key == pygame.K_e:
                     ppos = pygame.Vector2(player.rect.center)
 
-                    # Minesweeper box
-                    if ppos.distance_to(mystery_box.pos) <= InteractableBox.INTERACT_RADIUS and not mystery_box.completed:
+                    # Make bed
+                    if ppos.distance_to(make_bed.pos) <= MakeBed.INTERACT_RADIUS and not make_bed.made:
                         won = minesweeper.run(
                             parent_surface = display_surface,
                             number_images  = number_images,
                         )
                         if won:
-                            mystery_box.completed = True
+                            make_bed.made = True
                             overlay.hotbar.add_item_first_free(reward_vinyl)
 
-                    # Key box
-                    elif ppos.distance_to(key_box.pos) <= KeyBox.INTERACT_RADIUS:
-                        key_box.try_take(overlay.hotbar)
+                    # Key box — gives room key on completion
+                    elif ppos.distance_to(key_box.pos) <= InteractableBox.INTERACT_RADIUS and not key_box.completed:
+                        won = minesweeper.run(
+                            parent_surface = display_surface,
+                            number_images  = number_images,
+                        )
+                        if won:
+                            key_box.completed = True
+                            overlay.hotbar.add_item_first_free(room_key)
 
                     # Exit door — needs vinyl + key
                     elif ppos.distance_to(exit_door.pos) <= ExitDoor.INTERACT_RADIUS:
@@ -368,7 +375,7 @@ def run():
                             fade.fill((0, 0, 0))
                             for alpha in range(0, 256, 6):
                                 display_surface.blit(background, (0, 0))
-                                mystery_box.draw(display_surface)
+                                make_bed.draw(display_surface)
                                 key_box.draw(display_surface)
                                 exit_door.draw(display_surface)
                                 all_sprites.draw(display_surface)
@@ -383,13 +390,13 @@ def run():
                             sys.modules.pop('_next_level', None)
                             return
 
-        mystery_box.update(player)
+        make_bed.update(player)
         key_box.update(player)
         exit_door.update(player, overlay.hotbar)
         all_sprites.update(dt)
 
         display_surface.blit(background, (0, 0))
-        mystery_box.draw(display_surface)
+        make_bed.draw(display_surface)
         key_box.draw(display_surface)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)

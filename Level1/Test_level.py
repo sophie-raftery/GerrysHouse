@@ -528,6 +528,7 @@ while running:
                     front_door.transition(display_surface)
                     import shared_state
                     shared_state.returned_hotbar_slots = None  # clear before entering
+                    walk_sound.stop()
                     front_door.load_next_level()
                     # Restore hotbar items the player brought back
                     if shared_state.returned_hotbar_slots is not None:
