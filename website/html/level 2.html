@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Level 2: The Kitchen — Navigate around Jarry and uncover hidden evidence among the pots and pans." />
+  <title>Level 2: The Kitchen — Jarry's House</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    /* Level 2 specific — green theme */
+    .level-header { border-bottom-color: var(--accent-green); }
+    .level-badge  { color: var(--accent-green); border-color: var(--accent-green); }
+    .level-title  { color: var(--accent-green); }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar__inner">
+      <a href="./index.html" class="navbar__logo" aria-label="Jarry's House Home">🏠 JARRY'S HOUSE</a>
+      <button class="navbar__hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="navbar__links" id="nav-links" role="list">
+        <li><a href="./index.html">HOME</a></li>
+        <li><a href="./about.html">ABOUT US</a></li>
+        <li><a href="./level1.html">LEVEL 1</a></li>
+        <li><a href="./level 2.html">LEVEL 2</a></li>
+        <li><a href="./level 3.html">LEVEL 3</a></li>
+        <li><a href="./final_level.html">FINAL LEVEL</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- LEVEL HEADER -->
+    <header class="level-header pixel-bg" data-stars="20" aria-labelledby="level2-title">
+      <div class="container text-center">
+        <span class="level-badge" aria-label="Level 2">LEVEL 2</span>
+        <h1 class="level-title" id="level2-title">THE KITCHEN</h1>
+        <span class="level-icon" aria-hidden="true">🍳</span>
+      </div>
+    </header>
+
+    <!-- MAIN LEVEL CONTENT -->
+    <section class="dark-section" style="padding-bottom: 4rem;">
+      <div class="container">
+        <div class="level-main reveal">
+
+          <!-- LEFT: Mission Brief + Map -->
+          <div>
+            <div class="mission-brief-panel" aria-labelledby="brief2-heading">
+              <h2 class="panel-heading panel-heading--green" id="brief2-heading">📋 MISSION BRIEF</h2>
+              <p>
+                Something smells fishy in the kitchen. After your discoveries in the bedroom, a new trail of clues leads you into the heart
+                of the house, the kitchen.
+              </p>
+              <p>
+                Jarry's mother spends a lot of time in this room cooking.
+                You'll need to time your movements carefully, duck behind the kitchen island, and search
+                for the vinyl without rattling the pots and pans.
+              </p>
+              <p>
+                The second vinyl record is hidden somewhere in this room. Find it and collect more evidence to progress to the next level.
+              </p>
+            </div>
+
+            <!-- MAP PLACEHOLDER -->
+            <div class="mt-2" aria-labelledby="map2-heading">
+              <h2 class="panel-heading panel-heading--green" id="map2-heading" style="font-family:'Press Start 2P',monospace;font-size:0.65rem;color:var(--accent-green);margin-bottom:1rem;">🗺️ LEVEL MAP</h2>
+                  <img src="/images/kitchen.png">
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Objectives + Tips + Dev Notes -->
+          <div>
+
+            <div class="mission-brief-panel mb-2" aria-labelledby="obj2-heading">
+              <h2 class="panel-heading panel-heading--green" id="obj2-heading">🎯 OBJECTIVES</h2>
+              <ul class="objective-list" aria-label="Level 2 objectives">
+                <li>Enter the kitchen without alerting anyone</li>
+                <li>Search the kitchen for hidden evidence</li>
+                <li>Find and collect the Billy Joel vinyl record</li>
+                <li>Avoid Jarry's mother's patrol route around the kitchen island</li>
+                <li>Exit the kitchen with all the evidence</li>
+              </ul>
+            </div>
+
+            <div class="tip-box mb-2" aria-labelledby="tips2-heading">
+              <h2 class="panel-heading" id="tips2-heading" style="font-family:'Press Start 2P',monospace;font-size:0.6rem;color:var(--accent-purple);margin-bottom:1rem;">💡 TIPS &amp; TRICKS</h2>
+              <ul aria-label="Level 2 tips">
+                <li>Jarry's mother follows a fixed patrol route, learn the timing</li>
+                <li>Using the kitchen island lets you manoeuvre around her.</li>
+              </ul>
+            </div>
+
+            <div class="dev-notes" aria-labelledby="dev2-heading">
+              <h2 class="dev-notes__label" id="dev2-heading">📝 DEV NOTES</h2>
+              <p>[DEVELOPER NOTES HERE — Add behind-the-scenes commentary, technical notes, design decisions, or fun facts about Level 2 here.]</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME EMBED -->
+    <section class="panel-section" aria-labelledby="play2-heading">
+      <div class="container">
+        <h2 class="section-title" id="play2-heading">🎮 PLAY THE LEVEL</h2>
+        <!-- PLACEHOLDER: Drop your Pygbag/WebAssembly build here -->
+        <div class="placeholder-box placeholder-box--embed" aria-label="Game embed placeholder">
+          <span class="placeholder-box__icon" aria-hidden="true">🐍</span>
+          <p class="placeholder-box__label">
+            [ PYTHON GAME EMBED HERE ]<br/><br/>
+            Drop your Python / Pygame web build here<br/>
+            <!-- PLACEHOLDER: Add iframe or canvas element for Pygbag/WASM embed -->
+            &lt;iframe src="your-build/index.html"&gt;&lt;/iframe&gt;
+          </p>
+          <small style="color:var(--text-muted);font-size:0.75rem;margin-top:0.5rem;">
+            Powered by Pygbag / WebAssembly
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEVEL NAVIGATION -->
+    <section class="dark-section" style="padding: 3rem 0;">
+      <div class="container">
+        <nav class="level-nav" aria-label="Level navigation">
+          <a href="./level1.html" class="btn-pixel btn-pixel--blue" aria-label="Go to Level 1: The Bedroom">◀ LEVEL 1: THE BEDROOM</a>
+          <a href="./level 3.html" class="btn-pixel btn-pixel--orange" aria-label="Go to Level 3: The Garage">LEVEL 3: THE GARAGE ▶</a>
+        </nav>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer__content">
+      <div class="footer__logo">🏠 JARRY'S HOUSE</div>
+      <span class="footer__fish" aria-label="Patrick the fish">🐟</span>
+      <p class="footer__copy">
+        © <span></span> Jarry's House Development Team
+      </p>
+      <p class="footer__built">Built with ❤️ and pixels</p>
+    </div>
+  </footer>
+
+  <script src="../js/script.js"></script>
+</body>
+</html>

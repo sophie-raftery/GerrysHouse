@@ -1,15 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
-    <link rel="stylesheet" href="index.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Jarry's House — a stealth/mystery/investigation indie game. Someone took Patrick. Jarry knows more than he's saying." /> <!-- Description shown by search engines -->
+  <title>🏠 Jarry's House — Home</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
 </head>
 <body>
 
+  <!-- ============================================
+       NAVIGATION
+       ============================================ -->
+  <nav class="navbar" aria-label="Main navigation">
+    <div class="navbar__inner">
+      <a href="./index.html" class="navbar__logo" aria-label="Jarry's House Home"> JARRY'S HOUSE</a>
+      <!-- used on mobile devices -->
+      <button
+        class="navbar__hamburger"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="nav-links"
+      > 
+      <!-- these spans create ☰ for the hamburger ui -->
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="navbar__links" id="nav-links" role="list">
+        <li><a href="./index.html">HOME</a></li>
+        <li><a href="./about.html">ABOUT US</a></li>
+        <li><a href="./level1.html">LEVEL 1</a></li>
+        <li><a href="./level 2.html">LEVEL 2</a></li>
+        <li><a href="./level 3.html">LEVEL 3</a></li>
+        <li><a href="./final_level.html">FINAL LEVEL</a></li>
+      </ul>
+    </div>
+  </nav>
 
-    <script src="index.js"></script>
+  <main>
+
+    <!-- ============================================
+         HERO SECTION
+         ============================================ -->
+    <section class="hero pixel-bg" aria-labelledby="hero-title">
+    <!-- data-stars is a custom attribute for stars made with JS -->
+
+      <div class="hero__content">
+
+        <h1 class="hero__title" id="hero-title">🏠 JARRY'S HOUSE</h1>
+
+        <p class="hero__tagline">
+          "Someone took Patrick. Jarry knows more than he's saying."
+        </p>
+
+        <!-- Genre badges -->
+        <div class="hero__genres" role="list" aria-label="Game genres">
+          <span class="genre-badge genre-badge--stealth" role="listitem">🕵️ STEALTH</span>
+          <span class="genre-badge genre-badge--mystery" role="listitem">🔍 MYSTERY</span>
+          <span class="genre-badge genre-badge--investigation" role="listitem">🔎 INVESTIGATION</span>
+        </div>
+
+        <!-- Call-to-action buttons -->
+        <div class="hero__ctas">
+          <a href="#missions" class="btn-pixel" aria-label="View game levels">▶ VIEW LEVELS</a>
+          <a href="./about.html" class="btn-pixel btn-pixel--blue" aria-label="Meet the development team">👥 MEET THE TEAM</a>
+        </div>
+
+      </div>
+
+      <!-- Animated Patrick the fish -->
+      <div class="hero__fish" aria-label="Patrick the fish" title="Patrick — the missing fish!">🐟</div>
+
+      <!-- Animated Fluffy the dog -->
+      <div class="hero__dog" aria-label="Fluffy the dog" title="Fluffy">🐕</div>
+
+    </section>
+
+    <!-- ============================================
+         GAME OVERVIEW / MISSION BRIEFING
+         ============================================ -->
+    <section class="overview" id="overview" aria-labelledby="overview-title">
+      <div class="container">
+        <h2 class="section-title" id="overview-title"> MISSION BRIEFING</h2>
+        <div class="overview__grid reveal">
+
+          <div class="overview__text">
+            <p>
+              Welcome to <strong>Jarry's House</strong> , a stealth and investigation game set entirely inside
+              one home. You play as a sneaky investigator trying to uncover the truth behind the disappearance
+              of Patrick, your beloved pet fish who has gone missing under very suspicious circumstances.
+            </p>
+            <p>
+              Navigate through rooms filled with clues, hidden secrets, and a suspicious homeowner named
+              Jarry. Each room in the house contains a new puzzle, a new layer of mystery, and new evidence to
+              collect. But be careful — make too much noise and Jarry will know you're snooping around.
+            </p>
+            <p>
+              Collect vinyl records scattered throughout the house, avoid detection, and piece together what really
+              happened in the basement. The truth is closer than you think — and stranger than you'd ever imagine.
+              Can you solve the mystery of Jarry's House before it's too late?
+            </p>
+          </div>
+
+          <!-- Pixel-art game stats panel (cartridge style) -->
+          <div class="stat-panel" role="complementary" aria-label="Game information">
+            <div class="stat-panel__title"> GAME FILE </div>
+
+            <div class="stat-row">
+              <span class="stat-row__label">GENRE</span>
+              <span class="stat-row__value">Stealth / Mystery</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">PLAYERS</span>
+              <span class="stat-row__value">1 Player</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">PLATFORM</span>
+              <span class="stat-row__value">Web (Browser)</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">ENGINE</span>
+              <span class="stat-row__value">Pygame </span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">RATING</span>
+              <span class="stat-row__value">9/10</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">LEVELS</span>
+              <span class="stat-row__value">3 Levels</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row__label">STATUS</span>
+              <span class="stat-row__value">
+                <span class="status-badge">COMPLETE</span>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================
+         MISSION CARDS (Level Select)
+         ============================================ -->
+    <section class="mission-section" id="missions" aria-labelledby="missions-title">
+      <div class="container">
+        <h2 class="section-title" id="missions-title">SELECT MISSION</h2>
+        <div class="mission-grid reveal-children">
+
+          <!-- Level 1 -->
+          <article class="mission-card pixel-card--blue" aria-label="Level 1: The Bedroom">
+            <span class="mission-card__number">01</span>
+            <span class="mission-card__icon" aria-hidden="true">🛏️</span>
+            <p class="mission-card__level">LEVEL 1</p>
+            <h3 class="mission-card__title">THE BEDROOM</h3>
+            <p class="mission-card__desc">
+              Start your investigation in Jarry's bedroom. Search the room and find the first clue.
+            </p>
+            <a href="./level1.html" class="btn-pixel btn-pixel--blue" aria-label="Enter Level 1: The Bedroom">
+              ▶ ENTER LEVEL
+            </a>
+          </article>
+
+          <!-- Level 2 -->
+          <article class="mission-card pixel-card--green" aria-label="Level 2: The Kitchen">
+            <span class="mission-card__number">02</span>
+            <span class="mission-card__icon" aria-hidden="true">🍳</span>
+            <p class="mission-card__level">LEVEL 2</p>
+            <h3 class="mission-card__title">THE KITCHEN</h3>
+            <p class="mission-card__desc">
+              Something smells fishy in the kitchen. Navigate and uncover hidden evidence among the pots and pans.
+            </p>
+            <a href="./level 2.html" class="btn-pixel btn-pixel--green" aria-label="Enter Level 2: The Kitchen">
+              ▶ ENTER LEVEL
+            </a>
+          </article>
+
+          <!-- Level 3 -->
+          <article class="mission-card pixel-card--orange" aria-label="Level 3: The Garage">
+            <span class="mission-card__number">03</span>
+            <span class="mission-card__icon" aria-hidden="true">🔧</span>
+            <p class="mission-card__level">LEVEL 3</p>
+            <h3 class="mission-card__title">THE GARAGE</h3>
+            <p class="mission-card__desc">
+              Dark corners and locked boxes. The garage holds more secrets than old tools, find the key to the basement.
+            </p>
+            <a href="./level3.html" class="btn-pixel btn-pixel--orange" aria-label="Enter Level 3: The Garage">
+              ▶ ENTER LEVEL
+            </a>
+          </article>
+
+          <!-- Final Level -->
+          <article class="mission-card pixel-card--red" aria-label="Final Level: The Basement">
+            <span class="mission-card__number">⚠️</span>
+            <span class="mission-card__icon" aria-hidden="true">🚪</span>
+            <p class="mission-card__level">FINAL LEVEL</p>
+            <h3 class="mission-card__title">THE BASEMENT</h3>
+            <p class="mission-card__desc">
+              The truth awaits in the darkness below. Confront Jarry, rescue Patrick, and unravel the ultimate mystery.
+            </p>
+            <a href="./final_level.html" class="btn-pixel btn-pixel--red" aria-label="Enter Final Level: The Basement">
+              ⚠️ ENTER LEVEL
+            </a>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================
+         COMING SOON — Intel Incoming
+         ============================================ -->
+    <section class="coming-soon" id="media" aria-labelledby="media-title">
+      <div class="container">
+        <h2 class="section-title" id="media-title">📡 INTEL INCOMING...</h2>
+        <p class="section-subtitle">More content dropping soon. Stay tuned, agent.</p>
+
+        <div class="coming-soon-grid reveal-children">
+
+          <!-- PLACEHOLDER: Gameplay Trailer -->
+          <div class="placeholder-box" aria-label="Gameplay trailer coming soon">
+            <span class="placeholder-box__icon" aria-hidden="true">🎬</span>
+            <p class="placeholder-box__label">
+              GAMEPLAY TRAILER
+            </p>
+            <video width="320" height="240" controls>
+              <source src="/website/images/GameTrailer.mp4" type="video/mp4">
+            </video>
+
+          </div>
+
+          <!-- PLACEHOLDER: Screenshots -->
+          <div class="placeholder-box" aria-label="Game screenshots coming soon">
+            <span class="placeholder-box__icon" aria-hidden="true">📸</span>
+            <p class="placeholder-box__label">
+              SCREENSHOTS
+            </p>
+              <img src="/website/images/mineSweeperSS.png" width="300" height="180">
+          </div>
+
+          <!-- PLACEHOLDER: Artwork -->
+          <div class="placeholder-box" aria-label="Game artwork coming soon">
+            <span class="placeholder-box__icon" aria-hidden="true">🎨</span>
+            <p class="placeholder-box__label">
+              ARTWORK
+            </p>
+            <img src="/images/kitchen_island.png" width="300" height="180">
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer__content">
+      <div class="footer__logo">🏠 JARRY'S HOUSE</div>
+
+      <span class="footer__fish" aria-label="Patrick the fish" title="🐟 In memory of Patrick">🐟</span>
+
+      <p class="footer__copy">
+        © <span></span> Jarry's House Development Team
+      </p>
+      <p class="footer__built">Built with ❤️ and pixels</p>
+    </div>
+  </footer>
+
+  <script src="../js/script.js"></script>
 </body>
-
 </html>

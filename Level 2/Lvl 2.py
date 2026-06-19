@@ -21,6 +21,39 @@ from door import Door
 
 
 # ---------------------------------------------------------------------------
+# KeyedDoor – Door that requires a key to open
+# ---------------------------------------------------------------------------
+class KeyedDoor(Door):
+    """Door that requires Room_Key to open and consumes it."""
+    
+    def __init__(self, pos, target_module, image_path=None, size=(55, 66)):
+        super().__init__(pos, target_module, image_path, size)
+        self.requires_key = True
+        self._unlocked = False
+    
+    def check_key(self, hotbar):
+        """Check if player has Room_Key."""
+        return any(s and s.name == "Room_Key" for s in hotbar.slots)
+    
+    def consume_key(self, hotbar):
+        """Remove Room_Key from hotbar."""
+        for i, slot in enumerate(hotbar.slots):
+            if slot and slot.name == "Room_Key":
+                hotbar.slots[i] = None
+                return True
+        return False
+    
+    def try_enter_keyed(self, player, hotbar):
+        """Check if player can enter (needs key)."""
+        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
+        if dist <= self.interact_radius:
+            if self.check_key(hotbar):
+                self.consume_key(hotbar)
+                return True
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Player
 # ---------------------------------------------------------------------------
 class Player(pygame.sprite.Sprite):
@@ -76,7 +109,7 @@ class Player(pygame.sprite.Sprite):
 
 
 # ---------------------------------------------------------------------------
-# Collision — same house rect as Test_level, no dog house
+# Collision rectangles
 # ---------------------------------------------------------------------------
 _WALL_T = 40
 
@@ -109,55 +142,6 @@ def resolve_collision(sprite):
                 sprite.rect.bottom = col_rect.top
             else:
                 sprite.rect.top    = col_rect.bottom
-
-
-# ---------------------------------------------------------------------------
-# ExitDoor  – requires vinyl + key; returns to Gerry's Room
-# ---------------------------------------------------------------------------
-class ExitDoor:
-    INTERACT_RADIUS = 80
-
-    def __init__(self, pos):
-        self.pos         = pygame.Vector2(pos)
-        self.show_prompt = False
-        self._unlocked   = False
-        self.image = pygame.Surface((55, 66), pygame.SRCALPHA)
-        self.image.fill((140, 90, 50, 230))
-        pygame.draw.rect(self.image, (80, 40, 10), self.image.get_rect(), 3)
-        pygame.draw.circle(self.image, (220, 180, 60), (34, 34), 5)
-        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-        font = pygame.font.SysFont(None, 20)
-        self._open_s  = font.render("[E] Exit",         True, (255, 255, 255))
-        self._open_sh = font.render("[E] Exit",         True, (0, 0, 0))
-        self._lock_s  = font.render("Required key", True, (255, 120, 120))
-        self._lock_sh = font.render("Required key", True, (0, 0, 0))
-
-    def _check(self, hotbar):
-        hk = any(s and s.name == "Room_Key"   for s in hotbar.slots)
-        return hk
-
-    def update(self, player, hotbar):
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        self.show_prompt = dist <= self.INTERACT_RADIUS
-        self._unlocked   = self._check(hotbar)
-
-    def try_exit(self, hotbar):
-        return self._check(hotbar)
-
-    def draw(self, surface):
-        if self.show_prompt:
-            col  = (100, 255, 100, 70) if self._unlocked else (255, 100, 100, 70)
-            glow = pygame.Surface((70, 80), pygame.SRCALPHA)
-            pygame.draw.ellipse(glow, col, glow.get_rect())
-            surface.blit(glow, glow.get_rect(center=self.rect.center))
-        surface.blit(self.image, self.rect)
-        if self.show_prompt:
-            lbl  = self._open_s  if self._unlocked else self._lock_s
-            shad = self._open_sh if self._unlocked else self._lock_sh
-            px = self.rect.centerx - lbl.get_width() // 2
-            py = self.rect.top - 22
-            surface.blit(shad, (px + 1, py + 1))
-            surface.blit(lbl,  (px,     py))
 
 
 # ---------------------------------------------------------------------------
@@ -208,16 +192,24 @@ def run(incoming_hotbar_slots=None):
         for i, item in enumerate(incoming_hotbar_slots):
             overlay.hotbar.slots[i] = item
 
-    # Door — same position as Test_level front door
-    front_door = Door(
+    # TODO: Remove this temporary key for testing
+    room_key = InventoryItem("Room_Key", "Key Item", "images/Key.png")
+    overlay.hotbar.add_item_first_free(room_key)
+
+    # Doors — both lead to Kitchen
+    front_door = KeyedDoor(
         pos           = (1113, 364),
-        target_module = "Level1/Lvl 1 Gerry room.py",
+        target_module = "Level 2/Kitchen Lvl 2.py",
         image_path    = None,
         size          = (55, 66),
     )
 
-    # Exit door — at same position as front door, requires vinyl + key
-    exit_door = ExitDoor(pos=(1113, 364))
+    exit_door = KeyedDoor(
+        pos           = (1113, 364),
+        target_module = "Level 2/Kitchen Lvl 2.py",
+        image_path    = None,
+        size          = (55, 66),
+    )
 
     # Sprites
     all_sprites = pygame.sprite.Group()
@@ -251,14 +243,20 @@ def run(incoming_hotbar_slots=None):
                 overlay.hotbar.handle_keypress(event)
 
                 if event.key == pygame.K_e:
-                    if front_door.try_enter(player):
+                    # Try either door — both have same position but serve same function
+                    if front_door.try_enter_keyed(player, overlay.hotbar):
+                        import shared_state
+                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                         front_door.transition(display_surface)
                         front_door.load_next_level()
-                    elif exit_door.try_exit(overlay.hotbar):
-                        running = False   # TODO: transition to next map
+                    elif exit_door.try_enter_keyed(player, overlay.hotbar):
+                        import shared_state
+                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
+                        exit_door.transition(display_surface)
+                        exit_door.load_next_level()
 
+        exit_door.update(player)
         front_door.update(player)
-        exit_door.update(player, overlay.hotbar)
         all_sprites.update(dt)
         resolve_collision(player)
 
@@ -267,9 +265,9 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(house_front,     (850, 5))
         display_surface.blit(dog_house,       (100, 500))
         player.player_walk_sound()
+        front_door.draw(display_surface)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
-        # front_door.draw(display_surface)
         overlay.display(display_surface)
         pygame.display.update()
 
