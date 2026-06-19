@@ -445,7 +445,7 @@ ground_shovel = GroundItem(ground_items_group, shovel, (1220, 420))
 
 # World objects
 dog_bowl   = DogBowl((290, 580))
-dirt_mound = DirtMound((1050, 640), dog_bone, dirty_shovel)
+dirt_mound = DirtMound((150, 300), dog_bone, dirty_shovel)
 
 # Door — leads to Level 2 (swap target_module when Level 2 exists)
 # Positioned at the front door of the house (~920, 390)
@@ -507,6 +507,12 @@ walk_sound.set_volume(0.9)
 clock   = pygame.time.Clock()
 running = True
 
+# Timed message (shown near the front door when entry is blocked)
+_msg_text    = ""
+_msg_timer   = 0
+_MSG_DURATION = 2500  # ms
+_msg_font    = pygame.font.SysFont(None, 28)
+
 # ---------------------------------------------------------------------------
 # Game loop
 # ---------------------------------------------------------------------------
@@ -525,15 +531,19 @@ while running:
                 bowl_dist  = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)
 
                 if front_door.try_enter(player):
-                    front_door.transition(display_surface)
-                    import shared_state
-                    shared_state.returned_hotbar_slots = None  # clear before entering
-                    walk_sound.stop()
-                    front_door.load_next_level()
-                    # Restore hotbar items the player brought back
-                    if shared_state.returned_hotbar_slots is not None:
-                        for i, item in enumerate(shared_state.returned_hotbar_slots):
-                            overlay.hotbar.slots[i] = item
+                    if not dog_bowl.has_bone:
+                        _msg_text  = "You need to distract the dog first!"
+                        _msg_timer = pygame.time.get_ticks()
+                    else:
+                        front_door.transition(display_surface)
+                        import shared_state
+                        shared_state.returned_hotbar_slots = None  # clear before entering
+                        walk_sound.stop()
+                        front_door.load_next_level()
+                        # Restore hotbar items the player brought back
+                        if shared_state.returned_hotbar_slots is not None:
+                            for i, item in enumerate(shared_state.returned_hotbar_slots):
+                                overlay.hotbar.slots[i] = item
                 elif mound_dist <= DirtMound.INTERACT_RADIUS:
                     dirt_mound.try_dig(overlay.hotbar)
                 elif bowl_dist <= DogBowl.INTERACT_RADIUS:
@@ -579,6 +589,18 @@ while running:
     dirt_mound.draw(display_surface)
     dog_bowl.draw(display_surface, dog._at_bowl)
     front_door.draw(display_surface)
+
+    # Draw timed block message near the front door
+    if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
+        _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))
+        _lbl_shad = _msg_font.render(_msg_text, True, (0, 0, 0))
+        _mx = front_door.rect.centerx - _lbl.get_width() // 2
+        _my = front_door.rect.top - 30
+        display_surface.blit(_lbl_shad, (_mx + 1, _my + 1))
+        display_surface.blit(_lbl,      (_mx,     _my))
+    else:
+        _msg_text = ""
+
     overlay.display(display_surface)
     pygame.display.update()
 
