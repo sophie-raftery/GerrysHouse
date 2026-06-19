@@ -11,8 +11,6 @@ import minesweeper
 import shared_state
 
 
-DEBUG_COLLISIONS = False
-
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
@@ -357,15 +355,10 @@ def run():
                             make_bed.made = True
                             overlay.hotbar.add_item_first_free(reward_vinyl)
 
-                    # Key box — gives room key on completion
+                    # Key box — gives room key immediately on interact
                     elif ppos.distance_to(key_box.pos) <= InteractableBox.INTERACT_RADIUS and not key_box.completed:
-                        won = minesweeper.run(
-                            parent_surface = display_surface,
-                            number_images  = number_images,
-                        )
-                        if won:
-                            key_box.completed = True
-                            overlay.hotbar.add_item_first_free(room_key)
+                        key_box.completed = True
+                        overlay.hotbar.add_item_first_free(room_key)
 
                     # Exit door — needs vinyl + key
                     elif ppos.distance_to(exit_door.pos) <= ExitDoor.INTERACT_RADIUS:
