@@ -11,7 +11,7 @@ pygame.display.set_caption("Jarry's House")
 clock = pygame.time.Clock()
 
 # ── Audio ─────────────────────────────────────────────────────────────────────
-pygame.mixer.music.load(join("Daniel's Room", "Audios", "bad.mp3"))
+pygame.mixer.music.load(join("Daniel's Room", "Audios", "loseaudio.mp3"))
 pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(-1)   # loop until they retry or quit
 

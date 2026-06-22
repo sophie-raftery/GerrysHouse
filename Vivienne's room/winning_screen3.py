@@ -34,7 +34,7 @@ def run():
 
     # Images 
     Sprite = pygame.image.load(join(_ROOT, "images", "Player_sprites", "sprite_win.png"))
-    Vinyl = pygame.image.load(join(_ROOT, "images", "items", "vinyl_white.png")).convert_alpha()
+    Vinyl = pygame.image.load(join(_ROOT, "images", "items", "vinyl_red.png")).convert_alpha()
     Back_arrow = pygame.image.load(join(_ROOT, "images", "buttons", "back arrow.png"))
     Fwd_arrow = pygame.image.load(join(_ROOT, "images", "buttons", "forward arrow.png"))
 

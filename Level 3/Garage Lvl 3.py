@@ -193,6 +193,11 @@ def run(incoming_hotbar_slots=None):
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
+                # DEBUG: press O to add a vinyl record
+                if event.key == pygame.K_o:
+                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
+                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
                         exit_door.transition(display_surface)
