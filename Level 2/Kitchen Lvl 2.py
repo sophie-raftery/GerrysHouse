@@ -73,12 +73,15 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
+DEBUG_COLLISIONS = True
+
 _WALL_T = 40
 COLLISION_RECTS = [
-    pygame.Rect(0,  0, 1280, 200),
+    pygame.Rect(0,  0, 1280, 220),
     pygame.Rect(0, 720 - _WALL_T,  1280, _WALL_T),
     pygame.Rect(0, 0,  _WALL_T, 720),
     pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),
+    pygame.Rect(360 , 460 , 560, 20)
 ]
 
 def resolve_collision(sprite):
@@ -231,9 +234,30 @@ def run(incoming_hotbar_slots=None):
 
         # Draw
         display_surface.blit(background, (0, 0))
-        all_sprites.draw(display_surface)
-        display_surface.blit(counter_img, counter_rect)  # Draw counter as overlay (after sprites)
+
+        # Y-sort the counter against the player:
+        # If the player's feet (rect.bottom) are above the counter centre → player
+        # is "behind" the island, so draw counter on top.
+        # If the player's feet are below the counter centre → player has walked
+        # in front of the island, so draw counter first (below the player).
+        if player.rect.bottom < counter_rect.centery:
+            # Player is behind the counter — draw player first, counter on top
+            all_sprites.draw(display_surface)
+            display_surface.blit(counter_img, counter_rect)
+        else:
+            # Player is in front of the counter — draw counter first, player on top
+            display_surface.blit(counter_img, counter_rect)
+            all_sprites.draw(display_surface)
+
         exit_door.draw(display_surface)
+
+        if DEBUG_COLLISIONS:
+            for col_rect in COLLISION_RECTS:
+                glow_surf = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
+                glow_surf.fill((255, 0, 0, 60))
+                display_surface.blit(glow_surf, col_rect.topleft)
+                pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
+
         overlay.display(display_surface)
         pygame.display.update()
 
