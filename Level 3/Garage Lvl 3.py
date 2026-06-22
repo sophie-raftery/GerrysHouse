@@ -28,7 +28,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
         self.image = pygame.transform.scale_by(pygame.image.load(
-            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 2.5)
+            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 1.5)
         self.rect  = self.image.get_frect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
         self.direction    = pygame.Vector2()
         self.base_speed   = 150
@@ -120,16 +120,23 @@ def run(incoming_hotbar_slots=None):
     # Background
     background = pygame.image.load("images/garage.png").convert()
     background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+    
+    # Car — easily adjustable scale and position
+    CAR_SCALE = 1.0  # Adjust this to change size
+    CAR_POS   = (640, 400)  # Adjust this to change position
+    car_img = pygame.image.load("images/Car.png").convert_alpha()
+    car_img = pygame.transform.scale_by(car_img, CAR_SCALE)
+    car_rect = car_img.get_rect(center=CAR_POS)
 
     # Player walk animations
-    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 1.625) for i in range(1, 6)]
-    walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 1.625) for i in range(1, 6)]
+    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.925) for i in range(1, 6)]
+    walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.925) for i in range(1, 6)]
 
     # Hotbar
     overlay = Overlay(Player)
@@ -159,6 +166,7 @@ def run(incoming_hotbar_slots=None):
     fade_surf.fill((0, 0, 0))
     for alpha in range(255, -1, -6):
         display_surface.blit(background, (0, 0))
+        display_surface.blit(car_img, car_rect)
         all_sprites.draw(display_surface)
         overlay.display(display_surface)
         fade_surf.set_alpha(alpha)
@@ -188,9 +196,16 @@ def run(incoming_hotbar_slots=None):
         all_sprites.update(dt)
         resolve_collision(player)
 
-        # Draw
+        # Draw — Y-sort car against player so player walks behind it
         display_surface.blit(background, (0, 0))
-        all_sprites.draw(display_surface)
+        if player.rect.bottom < car_rect.centery:
+            # Player is behind the car — draw player first, car on top
+            all_sprites.draw(display_surface)
+            display_surface.blit(car_img, car_rect)
+        else:
+            # Player is in front of the car — draw car first, player on top
+            display_surface.blit(car_img, car_rect)
+            all_sprites.draw(display_surface)
         exit_door.draw(display_surface)
 
         if DEBUG_COLLISIONS:

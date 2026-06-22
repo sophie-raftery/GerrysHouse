@@ -164,6 +164,14 @@ def run(incoming_hotbar_slots=None):
     room_key = InventoryItem("Room_Key", "Key Item", "images/Key.png")
     overlay.hotbar.add_item_first_free(room_key)
 
+    # Garage door — centre of the map, leads to Garage Lvl 3
+    garage_door = Door(
+        pos           = (153, 204),
+        target_module = "Level 3/Garage Lvl 3.py",
+        image_path    = None,
+        size          = (155, 80),
+    )
+
 
     # Sprites
     all_sprites = pygame.sprite.Group()
@@ -180,6 +188,7 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(house_front,     (850, 5))
         display_surface.blit(dog_house,       (100, 500))
         all_sprites.draw(display_surface)
+        garage_door.draw(display_surface)
         overlay.display(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
@@ -197,19 +206,14 @@ def run(incoming_hotbar_slots=None):
                 overlay.hotbar.handle_keypress(event)
 
                 if event.key == pygame.K_e:
-                    # Try either door — both have same position but serve same function
-                    if front_door.try_enter_keyed(player, overlay.hotbar):
+                    if garage_door.try_enter(player):
                         import shared_state
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
-                        front_door.transition(display_surface)
-                        front_door.load_next_level()
-                    elif exit_door.try_enter_keyed(player, overlay.hotbar):
-                        import shared_state
-                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
-                        exit_door.transition(display_surface)
-                        exit_door.load_next_level()
+                        garage_door.transition(display_surface)
+                        garage_door.load_next_level()
 
         all_sprites.update(dt)
+        garage_door.update(player)
         resolve_collision(player)
 
         # Draw
@@ -219,6 +223,7 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(garage_front, (5,5))
         player.player_walk_sound()
         all_sprites.draw(display_surface)
+        garage_door.draw(display_surface)
         overlay.display(display_surface)
         pygame.display.update()
 
