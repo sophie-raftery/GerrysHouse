@@ -1,7 +1,8 @@
+
 """
 winning_screen1.py – Victory screen after returning the vinyl record.
-Plays MJ Bad, shows the player sprite and spinning vinyl.
-Forward arrow button loads Level 2.
+Plays Katie perry, shows the player sprite and spinning vinyl.
+Forward arrow button loads to final scene.
 """
 
 import pygame
@@ -11,9 +12,9 @@ from os.path import join
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.join(_HERE, '..')
-_LVL1 = os.path.join(_ROOT, 'Level1')
-if _LVL1 not in sys.path:
-    sys.path.insert(0, _LVL1)
+_LVL3 = os.path.join(_ROOT, 'Level3')
+if _LVL3 not in sys.path:
+    sys.path.insert(0, _LVL3)
 
 
 def run():
@@ -26,7 +27,7 @@ def run():
     clock = pygame.time.Clock()
 
     # Audio 
-    music_path = join(_ROOT, "Daniel's Room", "Audios", "bad.mp3")
+    music_path = join(_ROOT, "Daniel's Room", "Audios", "Katy Perry - Firework (Official Music Video).mp3")
     pygame.mixer.music.load(music_path)
     pygame.mixer.music.set_volume(0.7)
     pygame.mixer.music.play(loops=-1)
@@ -94,14 +95,14 @@ def run():
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if Fwd_rect.collidepoint(event.pos):
-                    # Fade out then load Level 2
+                    # Fade out then load Level 4
                     for alpha in range(0, 256, 6):
                         fade.set_alpha(alpha)
                         screen.blit(fade, (0, 0))
                         pygame.display.update()
                         clock.tick(60)
                     pygame.mixer.music.stop()
-                    _load_level2()
+                    _load_level4()
                     return
                 if Back_rect.collidepoint(event.pos):
                     pygame.mixer.music.stop()
@@ -140,11 +141,11 @@ def run():
     pygame.quit()
 
 
-def _load_level2():
-    """Load Level 2 after the winning screen."""
+def _load_level4():
+    """Load Level 4 after the winning screen."""
     import importlib.util
-    lvl2_path = os.path.join(_ROOT, "Level 2", "Lvl 2.py")
-    spec   = importlib.util.spec_from_file_location("_lvl2", lvl2_path)
+    lvl4_path = os.path.join(_ROOT, "Level 4", "Lvl 4.py")
+    spec   = importlib.util.spec_from_file_location("_lvl4", lvl4_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     if hasattr(module, "run"):

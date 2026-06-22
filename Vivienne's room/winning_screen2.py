@@ -1,7 +1,7 @@
 """
-winning_screen1.py – Victory screen after returning the vinyl record.
-Plays MJ Bad, shows the player sprite and spinning vinyl.
-Forward arrow button loads Level 2.
+winning_screen2.py – Victory screen after returning the vinyl record.
+Plays, shows the player sprite and spinning vinyl.
+Forward arrow button loads Level 3.
 """
 
 import pygame
@@ -11,9 +11,9 @@ from os.path import join
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.join(_HERE, '..')
-_LVL1 = os.path.join(_ROOT, 'Level1')
-if _LVL1 not in sys.path:
-    sys.path.insert(0, _LVL1)
+_LVL2 = os.path.join(_ROOT, 'Level2')
+if _LVL2 not in sys.path:
+    sys.path.insert(0, _LVL2)
 
 
 def run():
@@ -26,14 +26,14 @@ def run():
     clock = pygame.time.Clock()
 
     # Audio 
-    music_path = join(_ROOT, "Daniel's Room", "Audios", "bad.mp3")
+    music_path = join(_ROOT, "Daniel's Room", "Audios", "Billy Joel.mp3")
     pygame.mixer.music.load(music_path)
     pygame.mixer.music.set_volume(0.7)
     pygame.mixer.music.play(loops=-1)
 
     # Images 
     Sprite = pygame.image.load(join(_ROOT, "images", "Player_sprites", "sprite_win.png"))
-    Vinyl = pygame.image.load(join(_ROOT, "images", "items", "vinyl_white.png")).convert_alpha()
+    Vinyl = pygame.image.load(join(_ROOT, "images", "items", "vinyl_yellow.png")).convert_alpha()
     Back_arrow = pygame.image.load(join(_ROOT, "images", "buttons", "back arrow.png"))
     Fwd_arrow = pygame.image.load(join(_ROOT, "images", "buttons", "forward arrow.png"))
 
@@ -66,8 +66,8 @@ def run():
     font_sub = pygame.font.SysFont(None, 32)
     title = font_big.render("Level Complete!", True, (60, 30, 100))
     title_shd = font_big.render("Level Complete!", True, (0, 0, 0))
-    subtitle = font_sub.render("Press to continue to Level 2", True, (255, 255, 255))
-    sub_shd = font_sub.render("Press to continue to Level 2", True, (0, 0, 0))
+    subtitle = font_sub.render("Press to continue to Level 3", True, (255, 255, 255))
+    sub_shd = font_sub.render("Press to continue to Level 3", True, (0, 0, 0))
 
     angle   = 0
     running = True
@@ -94,14 +94,14 @@ def run():
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if Fwd_rect.collidepoint(event.pos):
-                    # Fade out then load Level 2
+                    # Fade out then load Level 3
                     for alpha in range(0, 256, 6):
                         fade.set_alpha(alpha)
                         screen.blit(fade, (0, 0))
                         pygame.display.update()
                         clock.tick(60)
                     pygame.mixer.music.stop()
-                    _load_level2()
+                    _load_level3()
                     return
                 if Back_rect.collidepoint(event.pos):
                     pygame.mixer.music.stop()
@@ -140,11 +140,11 @@ def run():
     pygame.quit()
 
 
-def _load_level2():
-    """Load Level 2 after the winning screen."""
+def _load_level3():
+    """Load Level 3 after the winning screen."""
     import importlib.util
-    lvl2_path = os.path.join(_ROOT, "Level 2", "Lvl 2.py")
-    spec   = importlib.util.spec_from_file_location("_lvl2", lvl2_path)
+    lvl3_path = os.path.join(_ROOT, "Level 3", "Lvl 3.py")
+    spec   = importlib.util.spec_from_file_location("_lvl3", lvl3_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     if hasattr(module, "run"):

@@ -88,6 +88,7 @@ COLLISION_RECTS = [
     pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),     # right
     pygame.Rect(910, 5,   450, 350),                   # house
     pygame.Rect(100, 500, 150, 150),                   # dog house
+    pygame.Rect(5 ,5, 265, 200 )
 ]
 
 

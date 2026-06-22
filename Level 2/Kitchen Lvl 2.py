@@ -73,7 +73,7 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = True
+DEBUG_COLLISIONS = False
 
 _WALL_T = 40
 COLLISION_RECTS = [
