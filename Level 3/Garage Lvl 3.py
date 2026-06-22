@@ -6,6 +6,7 @@ Entered via exit door from Level 3 Garden.
 import pygame
 import sys
 import os
+import math
 from os.path import join
 
 # ---------------------------------------------------------------------------
@@ -73,14 +74,20 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = False
+DEBUG_COLLISIONS = True
 
 _WALL_T = 40
 COLLISION_RECTS = [
-    pygame.Rect(0,              0,    1280, _WALL_T),   # top
+    pygame.Rect(0,              0,    1280, 170),   # top
     pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),   # bottom
     pygame.Rect(0,              0,  _WALL_T, 720),      # left
     pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),      # right
+    pygame.Rect(0 , 300, 180, 420),
+    pygame.Rect(1100, 400, 280, 420),
+    pygame.Rect(600, 0, 100, 400),
+    pygame.Rect(300, 0, 700, 240),
+    pygame.Rect(400, 390, 460, 50)
+    
 ]
 
 def resolve_collision(sprite):
@@ -209,9 +216,10 @@ def run(incoming_hotbar_slots=None):
         exit_door.draw(display_surface)
 
         if DEBUG_COLLISIONS:
+            pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)  # 30–150 alpha
             for col_rect in COLLISION_RECTS:
                 glow_surf = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
-                glow_surf.fill((255, 0, 0, 60))
+                glow_surf.fill((255, 0, 0, pulse))
                 display_surface.blit(glow_surf, col_rect.topleft)
                 pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
 
