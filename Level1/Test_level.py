@@ -390,6 +390,8 @@ house_front = pygame.transform.scale(
     pygame.image.load("images/jarrys_house.png"), (450, 450))
 dog_house = pygame.transform.scale(
     pygame.image.load("images/dogHouse.png"), (150, 150))
+garage_front = pygame.transform.scale(
+    pygame.image.load("images/Garage(out).png"),(300,300))
 
 # Player walk animations
 player_walk_forward       = [pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png") for i in range(1, 5)]
@@ -601,6 +603,7 @@ while running:
     display_surface.blit(background_surf, (0, 0))
     display_surface.blit(house_front,     (850, 5))
     display_surface.blit(dog_house,       (100, 500))
+    display_surface.blit(garage_front, (5,5))
     player.player_walk_sound()
     all_sprites.draw(display_surface)
 
