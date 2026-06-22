@@ -1,15 +1,16 @@
 """
-Kitchen Lvl 2.py – Kitchen interior level.
-Entered via exit door from Level 2 Garden.
+Garage Lvl 3.py – Garage interior level.
+Entered via exit door from Level 3 Garden.
 """
 
 import pygame
 import sys
 import os
+import math
 from os.path import join
 
 # ---------------------------------------------------------------------------
-# Ensure hotbar.py (lives in Level1) is importable from anywhere
+# Ensure hotbar.py and door.py (live in Level1) are importable from anywhere
 # ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _LVL1 = os.path.join(_HERE, '..', 'Level1')
@@ -28,7 +29,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
         self.image = pygame.transform.scale_by(pygame.image.load(
-            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 2.5)
+            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 1.5)
         self.rect  = self.image.get_frect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
         self.direction    = pygame.Vector2()
         self.base_speed   = 150
@@ -73,15 +74,20 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = False
+DEBUG_COLLISIONS = True
 
 _WALL_T = 40
 COLLISION_RECTS = [
-    pygame.Rect(0,  0, 1280, 220),
-    pygame.Rect(0, 720 - _WALL_T,  1280, _WALL_T),
-    pygame.Rect(0, 0,  _WALL_T, 720),
-    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),
-    pygame.Rect(360 , 460 , 560, 20)
+    pygame.Rect(0,              0,    1280, 170),   # top
+    pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),   # bottom
+    pygame.Rect(0,              0,  _WALL_T, 720),      # left
+    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),      # right
+    pygame.Rect(0 , 300, 180, 420),
+    pygame.Rect(1100, 400, 280, 420),
+    pygame.Rect(600, 0, 100, 400),
+    pygame.Rect(300, 0, 700, 240),
+    pygame.Rect(400, 390, 460, 50)
+    
 ]
 
 def resolve_collision(sprite):
@@ -102,33 +108,6 @@ def resolve_collision(sprite):
                 sprite.rect.bottom = col_rect.top
             else:
                 sprite.rect.top    = col_rect.bottom
-    
-    # Pixel-perfect counter collision
-    if 'counter_mask_data' in globals():
-        mask, counter_rect_ref = counter_mask_data
-        if sprite.rect.colliderect(counter_rect_ref):
-            # Check pixel-perfect collision
-            offset_x = sprite.rect.x - counter_rect_ref.x
-            offset_y = sprite.rect.y - counter_rect_ref.y
-            try:
-                if mask.overlap(pygame.mask.from_surface(sprite.image), (offset_x, offset_y)):
-                    # Push player out based on overlap direction
-                    ox = min(sprite.rect.right - counter_rect_ref.left,
-                            counter_rect_ref.right - sprite.rect.left)
-                    oy = min(sprite.rect.bottom - counter_rect_ref.top,
-                            counter_rect_ref.bottom - sprite.rect.top)
-                    if ox < oy:
-                        if sprite.rect.centerx < counter_rect_ref.centerx:
-                            sprite.rect.right = counter_rect_ref.left
-                        else:
-                            sprite.rect.left = counter_rect_ref.right
-                    else:
-                        if sprite.rect.centery < counter_rect_ref.centery:
-                            sprite.rect.bottom = counter_rect_ref.top
-                        else:
-                            sprite.rect.top = counter_rect_ref.bottom
-            except:
-                pass
 
 
 # ---------------------------------------------------------------------------
@@ -142,38 +121,29 @@ def run(incoming_hotbar_slots=None):
     pygame.init()
     WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
     display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Kitchen")
+    pygame.display.set_caption("Garage")
     clock = pygame.time.Clock()
 
     # Background
-    background = pygame.image.load("images/kitchen.png").convert()
+    background = pygame.image.load("images/garage.png").convert()
     background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
-
-    # Kitchen counter — easily adjustable scale and position
-    COUNTER_SCALE = 0.90  # Adjust this to change size
-    COUNTER_POS   = (640, 480)  # Adjust this to change position
-    counter_img = pygame.image.load("images/kitchen_counter.png").convert_alpha()
-    counter_img = pygame.transform.scale_by(counter_img, COUNTER_SCALE)
-    counter_rect = counter_img.get_rect(center=COUNTER_POS)
     
-    # # Counter front-half collision — tighter corners, better fit
-    # counter_collision = pygame.Rect(
-    #     counter_rect.left + counter_rect.width // 6,     # Left inset
-    #     counter_rect.centery,                            # Start at middle (front half only)
-    #     counter_rect.width - (counter_rect.width // 3),  # Narrower width
-    #     counter_rect.height // 2                         # Front half height
-    # )
-    # COLLISION_RECTS.append(counter_collision)
+    # Car — easily adjustable scale and position
+    CAR_SCALE = 1.0  # Adjust this to change size
+    CAR_POS   = (640, 400)  # Adjust this to change position
+    car_img = pygame.image.load("images/Car.png").convert_alpha()
+    car_img = pygame.transform.scale_by(car_img, CAR_SCALE)
+    car_rect = car_img.get_rect(center=CAR_POS)
 
     # Player walk animations
-    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 1.625) for i in range(1, 6)]
-    walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 1.625) for i in range(1, 6)]
+    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 1.5) for i in range(1, 5)]
+    walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.925) for i in range(1, 6)]
+    walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.925) for i in range(1, 6)]
 
     # Hotbar
     overlay = Overlay(Player)
@@ -186,12 +156,13 @@ def run(incoming_hotbar_slots=None):
         for i, item in enumerate(shared_state.returned_hotbar_slots):
             overlay.hotbar.slots[i] = item
 
-    # Exit door — back to garden
+    # Exit door — back to Level 3 garden
     exit_door = Door(
         pos           = (640, 650),
-        target_module = "Level 2/Lvl 2.py",
+        target_module = "Level 3/Lvl 3.py",
         image_path    = None,
-        size          = (55, 66),)
+        size          = (55, 66),
+    )
 
     # Sprites
     all_sprites = pygame.sprite.Group()
@@ -202,6 +173,7 @@ def run(incoming_hotbar_slots=None):
     fade_surf.fill((0, 0, 0))
     for alpha in range(255, -1, -6):
         display_surface.blit(background, (0, 0))
+        display_surface.blit(car_img, car_rect)
         all_sprites.draw(display_surface)
         overlay.display(display_surface)
         fade_surf.set_alpha(alpha)
@@ -224,7 +196,6 @@ def run(incoming_hotbar_slots=None):
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
                         exit_door.transition(display_surface)
-                        # Save hotbar before leaving
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                         exit_door.load_next_level()
 
@@ -232,29 +203,23 @@ def run(incoming_hotbar_slots=None):
         all_sprites.update(dt)
         resolve_collision(player)
 
-        # Draw
+        # Draw — Y-sort car against player so player walks behind it
         display_surface.blit(background, (0, 0))
-
-        # Y-sort the counter against the player:
-        # If the player's feet (rect.bottom) are above the counter centre → player
-        # is "behind" the island, so draw counter on top.
-        # If the player's feet are below the counter centre → player has walked
-        # in front of the island, so draw counter first (below the player).
-        if player.rect.bottom < counter_rect.centery:
-            # Player is behind the counter — draw player first, counter on top
+        if player.rect.bottom < car_rect.centery:
+            # Player is behind the car — draw player first, car on top
             all_sprites.draw(display_surface)
-            display_surface.blit(counter_img, counter_rect)
+            display_surface.blit(car_img, car_rect)
         else:
-            # Player is in front of the counter — draw counter first, player on top
-            display_surface.blit(counter_img, counter_rect)
+            # Player is in front of the car — draw car first, player on top
+            display_surface.blit(car_img, car_rect)
             all_sprites.draw(display_surface)
-
         exit_door.draw(display_surface)
 
         if DEBUG_COLLISIONS:
+            pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)  # 30–150 alpha
             for col_rect in COLLISION_RECTS:
                 glow_surf = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
-                glow_surf.fill((255, 0, 0, 60))
+                glow_surf.fill((255, 0, 0, pulse))
                 display_surface.blit(glow_surf, col_rect.topleft)
                 pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
 
@@ -262,4 +227,8 @@ def run(incoming_hotbar_slots=None):
         pygame.display.update()
 
     pygame.quit()
-#sdegfefafe
+
+
+if __name__ == "__main__":
+    os.chdir(os.path.join(_HERE, ".."))
+    run()

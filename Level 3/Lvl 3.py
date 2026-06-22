@@ -1,5 +1,5 @@
 """
-Lvl 2.py – Garden exterior level (no dog, dog bowl, or dog house).
+Lvl 3.py – Garden exterior level (no dog, dog bowl, or dog house).
 Entered via a Door transition or launched directly.
 """
 
@@ -9,7 +9,7 @@ import os
 from os.path import join
 
 # ---------------------------------------------------------------------------
-# Ensure hotbar.py (lives in Level1) is importable from anywhere
+# Ensure hotbar.py and door.py (live in Level1) are importable from anywhere
 # ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _LVL1 = os.path.join(_HERE, '..', 'Level1')
@@ -18,40 +18,6 @@ if _LVL1 not in sys.path:
 
 from hotbar import Hotbar, Overlay, InventoryItem
 from door import Door
-
-
-# ---------------------------------------------------------------------------
-# KeyedDoor – Door that requires a key to open
-# ---------------------------------------------------------------------------
-class KeyedDoor(Door):
-    """Door that requires Room_Key to open and consumes it."""
-    
-    def __init__(self, pos, target_module, image_path=None, size=(55, 66)):
-        super().__init__(pos, target_module, image_path, size)
-        self.requires_key = True
-        self._unlocked = False
-    
-    def check_key(self, hotbar):
-        """Check if player has Room_Key."""
-        return any(s and s.name == "Room_Key" for s in hotbar.slots)
-    
-    def consume_key(self, hotbar):
-        """Remove Room_Key from hotbar."""
-        for i, slot in enumerate(hotbar.slots):
-            if slot and slot.name == "Room_Key":
-                hotbar.slots[i] = None
-                return True
-        return False
-    
-    def try_enter_keyed(self, player, hotbar):
-        """Check if player can enter (needs key)."""
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        if dist <= self.interact_radius:
-            if self.check_key(hotbar):
-                self.consume_key(hotbar)
-                return True
-        return False
-
 
 # ---------------------------------------------------------------------------
 # Player
@@ -119,8 +85,8 @@ COLLISION_RECTS = [
     pygame.Rect(0,              0,  _WALL_T, 720),      # left border
     pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),      # right border
     pygame.Rect(910, 5, 450, 350),  
-    pygame.Rect(100, 500, 150, 150),   
-    pygame.Rect(5 ,5, 265, 200 )                  # dog house area
+    pygame.Rect(100, 500, 150, 150),                     # dog house area
+    pygame.Rect(5 ,5, 265, 200 )
 ]
 
 
@@ -158,7 +124,7 @@ def run(incoming_hotbar_slots=None):
     pygame.init()
     WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
     display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption('Level 2')
+    pygame.display.set_caption('Level 3')
     clock = pygame.time.Clock()
 
     # Background
@@ -199,20 +165,14 @@ def run(incoming_hotbar_slots=None):
     room_key = InventoryItem("Room_Key", "Key Item", "images/Key.png")
     overlay.hotbar.add_item_first_free(room_key)
 
-    # Doors — both lead to Kitchen
-    front_door = KeyedDoor(
-        pos           = (1113, 364),
-        target_module = "Level 2/Kitchen Lvl 2.py",
+    # Garage door — centre of the map, leads to Garage Lvl 3
+    garage_door = Door(
+        pos           = (153, 204),
+        target_module = "Level 3/Garage Lvl 3.py",
         image_path    = None,
-        size          = (55, 66),
+        size          = (155, 80),
     )
 
-    exit_door = KeyedDoor(
-        pos           = (1113, 364),
-        target_module = "Level 2/Kitchen Lvl 2.py",
-        image_path    = None,
-        size          = (55, 66),
-    )
 
     # Sprites
     all_sprites = pygame.sprite.Group()
@@ -229,6 +189,7 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(house_front,     (850, 5))
         display_surface.blit(dog_house,       (100, 500))
         all_sprites.draw(display_surface)
+        garage_door.draw(display_surface)
         overlay.display(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
@@ -246,21 +207,14 @@ def run(incoming_hotbar_slots=None):
                 overlay.hotbar.handle_keypress(event)
 
                 if event.key == pygame.K_e:
-                    # Try either door — both have same position but serve same function
-                    if front_door.try_enter_keyed(player, overlay.hotbar):
+                    if garage_door.try_enter(player):
                         import shared_state
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
-                        front_door.transition(display_surface)
-                        front_door.load_next_level()
-                    elif exit_door.try_enter_keyed(player, overlay.hotbar):
-                        import shared_state
-                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
-                        exit_door.transition(display_surface)
-                        exit_door.load_next_level()
+                        garage_door.transition(display_surface)
+                        garage_door.load_next_level()
 
-        exit_door.update(player)
-        front_door.update(player)
         all_sprites.update(dt)
+        garage_door.update(player)
         resolve_collision(player)
 
         # Draw
@@ -269,9 +223,8 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(dog_house,       (100, 500))
         display_surface.blit(garage_front, (5,5))
         player.player_walk_sound()
-        front_door.draw(display_surface)
-        exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
+        garage_door.draw(display_surface)
         overlay.display(display_surface)
         pygame.display.update()
 

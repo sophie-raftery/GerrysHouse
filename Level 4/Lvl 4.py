@@ -1,5 +1,5 @@
 """
-Lvl 2.py – Garden exterior level (no dog, dog bowl, or dog house).
+Lvl 4.py – Garden exterior level (Level 4 version).
 Entered via a Door transition or launched directly.
 """
 
@@ -9,7 +9,7 @@ import os
 from os.path import join
 
 # ---------------------------------------------------------------------------
-# Ensure hotbar.py (lives in Level1) is importable from anywhere
+# Ensure hotbar.py and door.py (live in Level1) are importable from anywhere
 # ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _LVL1 = os.path.join(_HERE, '..', 'Level1')
@@ -18,39 +18,6 @@ if _LVL1 not in sys.path:
 
 from hotbar import Hotbar, Overlay, InventoryItem
 from door import Door
-
-
-# ---------------------------------------------------------------------------
-# KeyedDoor – Door that requires a key to open
-# ---------------------------------------------------------------------------
-class KeyedDoor(Door):
-    """Door that requires Room_Key to open and consumes it."""
-    
-    def __init__(self, pos, target_module, image_path=None, size=(55, 66)):
-        super().__init__(pos, target_module, image_path, size)
-        self.requires_key = True
-        self._unlocked = False
-    
-    def check_key(self, hotbar):
-        """Check if player has Room_Key."""
-        return any(s and s.name == "Room_Key" for s in hotbar.slots)
-    
-    def consume_key(self, hotbar):
-        """Remove Room_Key from hotbar."""
-        for i, slot in enumerate(hotbar.slots):
-            if slot and slot.name == "Room_Key":
-                hotbar.slots[i] = None
-                return True
-        return False
-    
-    def try_enter_keyed(self, player, hotbar):
-        """Check if player can enter (needs key)."""
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        if dist <= self.interact_radius:
-            if self.check_key(hotbar):
-                self.consume_key(hotbar)
-                return True
-        return False
 
 
 # ---------------------------------------------------------------------------
@@ -111,21 +78,21 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
+DEBUG_COLLISIONS = False
 _WALL_T = 40
 
 COLLISION_RECTS = [
-    pygame.Rect(0,              0,    1280, _WALL_T),   # top border
-    pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),   # bottom border
-    pygame.Rect(0,              0,  _WALL_T, 720),      # left border
-    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),      # right border
-    pygame.Rect(910, 5, 450, 350),  
-    pygame.Rect(100, 500, 150, 150),   
-    pygame.Rect(5 ,5, 265, 200 )                  # dog house area
+    pygame.Rect(0,              0,    1280, _WALL_T),  # top
+    pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),  # bottom
+    pygame.Rect(0,              0,  _WALL_T, 720),     # left
+    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),     # right
+    pygame.Rect(910, 5,   450, 350),                   # house
+    pygame.Rect(100, 500, 150, 150),                   # dog house
+    pygame.Rect(5 ,5, 265, 200 )
 ]
 
 
 def resolve_collision(sprite):
-    """Push a sprite's rect out of all COLLISION_RECTS using AABB overlap."""
     for col_rect in COLLISION_RECTS:
         if not sprite.rect.colliderect(col_rect):
             continue
@@ -158,20 +125,18 @@ def run(incoming_hotbar_slots=None):
     pygame.init()
     WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
     display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption('Level 2')
+    pygame.display.set_caption('Level 4')
     clock = pygame.time.Clock()
 
     # Background
     background_surf = pygame.image.load("images/garden.png").convert()
     background_surf = pygame.transform.scale(background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
-    # House and dog house
-    house_front = pygame.transform.scale(
-        pygame.image.load("images/jarrys_house.png"), (450, 450))
-    dog_house = pygame.transform.scale(
-        pygame.image.load("images/dogHouse.png"), (150, 150))
-    garage_front = pygame.transform.scale(
-        pygame.image.load("images/Garage(out).png"),(300,300))
+    # Scenery
+    house_front  = pygame.transform.scale(pygame.image.load("images/jarrys_house.png"), (450, 450))
+    dog_house    = pygame.transform.scale(pygame.image.load("images/dogHouse.png"), (150, 150))
+    garage_front = pygame.transform.scale(pygame.image.load("images/Garage(out).png"), (300, 300))
+
     # Player walk animations
     player_walk_forward       = [pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png") for i in range(1, 5)]
     player_walk_back          = [pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png") for i in range(1, 5)]
@@ -179,13 +144,8 @@ def run(incoming_hotbar_slots=None):
     player_walk_left          = [pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png") for i in range(1, 5)]
     player_walk_forward_right = [pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png") for i in range(1, 5)]
     player_walk_forward_left  = [pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png") for i in range(1, 5)]
-
-    player_walk_back_right = [
-        pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.65)
-        for i in range(1, 6)]
-    player_walk_back_left = [
-        pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.65)
-        for i in range(1, 6)]
+    player_walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.65) for i in range(1, 6)]
+    player_walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.65) for i in range(1, 6)]
 
     # Hotbar
     overlay = Overlay(Player)
@@ -195,31 +155,31 @@ def run(incoming_hotbar_slots=None):
         for i, item in enumerate(incoming_hotbar_slots):
             overlay.hotbar.slots[i] = item
 
-    # TODO: Remove this temporary key for testing
-    room_key = InventoryItem("Room_Key", "Key Item", "images/Key.png")
-    overlay.hotbar.add_item_first_free(room_key)
-
-    # Doors — both lead to Kitchen
-    front_door = KeyedDoor(
-        pos           = (1113, 364),
-        target_module = "Level 2/Kitchen Lvl 2.py",
+    # Doors
+    front_door = Door(
+        pos           = (1004, 320),
+        target_module = "Level1/Lvl 1 Gerry room.py",
         image_path    = None,
-        size          = (55, 66),
+        size          = (40, 60),
     )
-
-    exit_door = KeyedDoor(
-        pos           = (1113, 364),
-        target_module = "Level 2/Kitchen Lvl 2.py",
+    vinyl_door = Door(
+        pos           = (200, 100),
+        target_module = "Vivienne's room/winning_screen1.py",
         image_path    = None,
-        size          = (55, 66),
+        size          = (50, 70),
     )
 
     # Sprites
     all_sprites = pygame.sprite.Group()
-    player = Player(all_sprites)
+    player      = Player(all_sprites)
 
     walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-    walk_sound.set_volume(0.1)
+    walk_sound.set_volume(0.9)
+
+    _msg_text     = ""
+    _msg_timer    = 0
+    _MSG_DURATION = 2500
+    _msg_font     = pygame.font.SysFont(None, 28)
 
     # Fade in
     fade_surf = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -228,7 +188,10 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(background_surf, (0, 0))
         display_surface.blit(house_front,     (850, 5))
         display_surface.blit(dog_house,       (100, 500))
+        display_surface.blit(garage_front,    (5, 5))
         all_sprites.draw(display_surface)
+        front_door.draw(display_surface)
+        vinyl_door.draw(display_surface)
         overlay.display(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
@@ -242,24 +205,33 @@ def run(incoming_hotbar_slots=None):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
                 if event.key == pygame.K_e:
-                    # Try either door — both have same position but serve same function
-                    if front_door.try_enter_keyed(player, overlay.hotbar):
-                        import shared_state
-                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
+                    if front_door.try_enter(player):
                         front_door.transition(display_surface)
-                        front_door.load_next_level()
-                    elif exit_door.try_enter_keyed(player, overlay.hotbar):
                         import shared_state
-                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
-                        exit_door.transition(display_surface)
-                        exit_door.load_next_level()
+                        shared_state.returned_hotbar_slots = None
+                        walk_sound.stop()
+                        front_door.load_next_level()
+                        if shared_state.returned_hotbar_slots is not None:
+                            for i, item in enumerate(shared_state.returned_hotbar_slots):
+                                overlay.hotbar.slots[i] = item
+                        player.rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+                    elif vinyl_door.try_enter(player):
+                        vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
+                        if any(s and s.name in vinyl_names for s in overlay.hotbar.slots):
+                            vinyl_door.transition(display_surface)
+                            walk_sound.stop()
+                            vinyl_door.load_next_level()
+                        else:
+                            _msg_text  = "You need a vinyl record!"
+                            _msg_timer = pygame.time.get_ticks()
 
-        exit_door.update(player)
         front_door.update(player)
+        vinyl_door.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
 
@@ -267,11 +239,26 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(background_surf, (0, 0))
         display_surface.blit(house_front,     (850, 5))
         display_surface.blit(dog_house,       (100, 500))
-        display_surface.blit(garage_front, (5,5))
+        display_surface.blit(garage_front,    (5, 5))
         player.player_walk_sound()
-        front_door.draw(display_surface)
-        exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
+        front_door.draw(display_surface)
+        vinyl_door.draw(display_surface)
+
+        if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
+            _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))
+            _lbl_shad = _msg_font.render(_msg_text, True, (0, 0, 0))
+            _mx = front_door.rect.centerx - _lbl.get_width() // 2
+            _my = front_door.rect.top - 30
+            display_surface.blit(_lbl_shad, (_mx + 1, _my + 1))
+            display_surface.blit(_lbl,      (_mx,     _my))
+        else:
+            _msg_text = ""
+
+        if DEBUG_COLLISIONS:
+            for col_rect in COLLISION_RECTS:
+                pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
+
         overlay.display(display_surface)
         pygame.display.update()
 
@@ -279,6 +266,5 @@ def run(incoming_hotbar_slots=None):
 
 
 if __name__ == "__main__":
-    # Set cwd to project root so all image/audio paths resolve correctly
     os.chdir(os.path.join(_HERE, ".."))
     run()
