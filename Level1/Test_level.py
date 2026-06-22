@@ -488,6 +488,7 @@ COLLISION_RECTS = [
     pygame.Rect(910, 5,   450, 350),
     # Dog house
     pygame.Rect(100, 500, 150, 150),
+    pygame.Rect(5 ,5, 265, 200 )
 ]
 
 
@@ -595,10 +596,6 @@ while running:
     # Collision resolution
     resolve_collision(player)
 
-    if DEBUG_COLLISIONS:
-        for col_rect in COLLISION_RECTS:
-            pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
-
     # Draw
     display_surface.blit(background_surf, (0, 0))
     display_surface.blit(house_front,     (850, 5))
@@ -614,6 +611,14 @@ while running:
     dog_bowl.draw(display_surface, dog._at_bowl)
     front_door.draw(display_surface)
     vinyl_door.draw(display_surface)
+
+    if DEBUG_COLLISIONS:
+        pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)  # 30–150 alpha
+        for col_rect in COLLISION_RECTS:
+            glow = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
+            glow.fill((255, 0, 0, pulse))
+            display_surface.blit(glow, col_rect.topleft)
+            pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
 
     # Draw timed block message near the front door
     if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
