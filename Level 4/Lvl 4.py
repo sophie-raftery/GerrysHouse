@@ -157,7 +157,7 @@ def run(incoming_hotbar_slots=None):
     # Doors
     front_door = Door(
         pos           = (1004, 320),
-        target_module = "Level1/Lvl 1 Gerry room.py",
+        target_module = "Level 4/Lvl 4 Gerry room.py",
         image_path    = None,
         size          = (40, 60),
     )
