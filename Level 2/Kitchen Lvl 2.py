@@ -29,7 +29,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, groups):
         super().__init__(groups)
         self.image = pygame.transform.scale_by(pygame.image.load(
-            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 2.5)
+            r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 1.875)
         self.rect  = self.image.get_frect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
         self.direction    = pygame.Vector2()
         self.base_speed   = 150
@@ -279,6 +279,57 @@ def run(incoming_hotbar_slots=None):
     counter_img = pygame.image.load("images/kitchen_counter.png").convert_alpha()
     counter_img = pygame.transform.scale_by(counter_img, COUNTER_SCALE)
     counter_rect = counter_img.get_rect(center=COUNTER_POS)
+
+    # Vinyl player prop — sits on top of the counter (centre-top edge)
+    def _load_or_placeholder(path, colour):
+        """Load image or return a coloured placeholder if it doesn't exist yet."""
+        if os.path.isfile(path):
+            return pygame.image.load(path).convert_alpha()
+        surf = pygame.Surface((80, 80), pygame.SRCALPHA)
+        surf.fill(colour)
+        return surf
+
+    VINYL_PLAYER_SCALE = 1.0   # ← adjust size here
+    VINYL_PLAYER_POS   = (counter_rect.centerx, counter_rect.top + 40)  # ← adjust position here
+
+    vp_with_raw    = _load_or_placeholder("images/vinyl_player(with).png",    (180, 80, 80, 220))
+    vp_without_raw = _load_or_placeholder("images/vinyl_player(without).png", (80, 80, 180, 220))
+    vp_with_img    = pygame.transform.scale_by(vp_with_raw,    VINYL_PLAYER_SCALE)
+    vp_without_img = pygame.transform.scale_by(vp_without_raw, VINYL_PLAYER_SCALE)
+
+    class VinylPlayer:
+        INTERACT_RADIUS = 130   # ← adjust interaction range here
+
+        def __init__(self):
+            self.collected   = False
+            self.show_prompt = False
+            self.image       = vp_with_img
+            self.rect        = self.image.get_rect(center=VINYL_PLAYER_POS)
+            _font = pygame.font.SysFont(None, 22)
+            self._prompt_surf = _font.render("[E] Take vinyl", True, (255, 255, 255))
+            self._prompt_shad = _font.render("[E] Take vinyl", True, (0,   0,   0))
+
+        def update(self, player, dt):
+            dist = pygame.Vector2(player.rect.center).distance_to(
+                   pygame.Vector2(VINYL_PLAYER_POS))
+            self.show_prompt = dist <= self.INTERACT_RADIUS and not self.collected
+
+        def interact(self, hotbar):
+            if self.collected:
+                return False
+            self.collected = True
+            self.image = vp_without_img
+            self.rect  = self.image.get_rect(center=VINYL_PLAYER_POS)
+            billy_vinyl = InventoryItem("Billy_Vinyl", "Quest Item",
+                                        "images/items/Vinyl_yellow.png")
+            hotbar.add_item_first_free(billy_vinyl)
+            return True
+            billy_vinyl = InventoryItem("Billy_Vinyl", "Quest Item",
+                                        "images/items/Vinyl_yellow.png")
+            hotbar.add_item_first_free(billy_vinyl)
+            return True
+
+    vinyl_player = VinylPlayer()
     
     # # Counter front-half collision — tighter corners, better fit
     # counter_collision = pygame.Rect(
@@ -290,14 +341,14 @@ def run(incoming_hotbar_slots=None):
     # COLLISION_RECTS.append(counter_collision)
 
     # Player walk animations
-    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 2.5) for i in range(1, 5)]
-    walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 1.625) for i in range(1, 6)]
-    walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 1.625) for i in range(1, 6)]
+    walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 1.875) for i in range(1, 5)]
+    walk_back          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png"), 1.875) for i in range(1, 5)]
+    walk_right         = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png"), 1.875) for i in range(1, 5)]
+    walk_left          = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png"), 1.875) for i in range(1, 5)]
+    walk_forward_right = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png"), 1.875) for i in range(1, 5)]
+    walk_forward_left  = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png"), 1.875) for i in range(1, 5)]
+    walk_back_right    = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 1.21875) for i in range(1, 6)]
+    walk_back_left     = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 1.21875) for i in range(1, 6)]
 
     # Mother walk animations
     MOTHER_SCALE = 2
@@ -361,26 +412,41 @@ def run(incoming_hotbar_slots=None):
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
                         exit_door.transition(display_surface)
-                        # Save hotbar before leaving
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                         exit_door.load_next_level()
+                    elif vinyl_player.show_prompt:
+                        vinyl_player.interact(overlay.hotbar)
 
         exit_door.update(player)
+        vinyl_player.update(player, dt)
         all_sprites.update(dt)
         resolve_collision(player)
 
         # Draw
         display_surface.blit(background, (0, 0))
 
-        # Y-sort each sprite against the counter independently.
-        # Sprites whose feet are above counter centre → behind counter (draw first).
-        # Sprites whose feet are at or below counter centre → in front (draw after).
+        # Y-sort sprites against counter
         behind_counter  = [s for s in all_sprites if s.rect.bottom < counter_rect.centery]
         infront_counter = [s for s in all_sprites if s.rect.bottom >= counter_rect.centery]
 
         for sprite in behind_counter:
             display_surface.blit(sprite.image, sprite.rect)
+
+        # Counter (static original image)
         display_surface.blit(counter_img, counter_rect)
+
+        # Vinyl player prop on top of counter
+        display_surface.blit(vinyl_player.image, vinyl_player.rect)
+        if vinyl_player.show_prompt:
+            glow = pygame.Surface((vinyl_player.rect.width + 30,
+                                   vinyl_player.rect.height + 30), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
+            display_surface.blit(glow, glow.get_rect(center=vinyl_player.rect.center))
+            px = vinyl_player.rect.centerx - vinyl_player._prompt_surf.get_width() // 2
+            py = vinyl_player.rect.top - 24
+            display_surface.blit(vinyl_player._prompt_shad, (px + 1, py + 1))
+            display_surface.blit(vinyl_player._prompt_surf, (px,     py))
+
         for sprite in infront_counter:
             display_surface.blit(sprite.image, sprite.rect)
 
