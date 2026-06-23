@@ -229,10 +229,12 @@ def run(incoming_hotbar_slots=None):
                                 overlay.hotbar.slots[i] = item
                         # Reload sprite from disk and place at return spawn
                         player.image = pygame.image.load(r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
-                        player.rect  = player.image.get_frect(center=RETURN_SPAWN)
+                        player.rect.center = RETURN_SPAWN
                     elif vinyl_door.try_enter(player):
                         vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
                         if any(s and s.name in vinyl_names for s in overlay.hotbar.slots):
+                            import shared_state
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                             vinyl_door.transition(display_surface)
                             walk_sound.stop()
                             vinyl_door.load_next_level()

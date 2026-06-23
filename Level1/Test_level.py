@@ -5,7 +5,7 @@ from hotbar import Hotbar, Overlay, InventoryItem
 from door import Door
 
 
-DEBUG_COLLISIONS = True
+DEBUG_COLLISIONS = False
 # GroundItem – an item lying on the ground that the player can pick up
 class GroundItem(pygame.sprite.Sprite):
     PICKUP_RADIUS = 80
@@ -212,6 +212,8 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 class Dog(pygame.sprite.Sprite):
     SPEED         = 60
+    CHASE_SPEED   = 110          # faster when chasing
+    AGRO_RADIUS   = 150          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 120
     FEELER_LEN    = 70
@@ -233,6 +235,8 @@ class Dog(pygame.sprite.Sprite):
 
     def __init__(self, groups, player):
         super().__init__(groups)
+        self._player      = player          # keep ref for agro checks
+        self._chasing     = False
         self._anims = {
             'down':  dog_walk_up,
             'up':    dog_walk_down,
@@ -326,6 +330,26 @@ class Dog(pygame.sprite.Sprite):
         if self._at_bowl:
             self.image = self._anims['down'][0]
             return
+
+        # --- Agro check ---------------------------------------------------
+        player_dist = pygame.Vector2(self._player.rect.center).distance_to(self.pos)
+        # Enter chase if player steps into agro ring (and dog isn't distracted)
+        if not self._fetching and not self._at_bowl:
+            self._chasing = player_dist <= self.AGRO_RADIUS
+
+        if self._chasing:
+            # Chase directly toward the player
+            to_player = pygame.Vector2(self._player.rect.center) - self.pos
+            if to_player.length() > 0:
+                goal_dir = to_player.normalize()
+                move_dir = self._compute_steering(goal_dir)
+                self._update_facing(move_dir)
+                self.pos += move_dir * self.CHASE_SPEED * dt
+                self.rect.center = (int(self.pos.x), int(self.pos.y))
+                self._push_out_of_obstacles()
+            self._tick_animation()
+            return
+        # ------------------------------------------------------------------
 
         to_target = self._waypoint - self.pos
         dist = to_target.length()
@@ -505,6 +529,14 @@ def run():
         size          = (50, 70),
     )
 
+    # Lose door — used when the dog catches the player (invisible, no fixed pos needed)
+    lose_door = Door(
+        pos           = (0, 0),
+        target_module = "Vivienne's room/losing _screen1.py",
+        image_path    = None,
+        size          = (1, 1),
+    )
+
     # Sprites
     all_sprites = pygame.sprite.Group()
     player = Player(all_sprites)
@@ -571,11 +603,12 @@ def run():
                                     overlay.hotbar.slots[i] = item
                             # Reload sprite from disk and place at return spawn
                             player.image = pygame.image.load(r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
-                            player.rect  = player.image.get_frect(center=RETURN_SPAWN)
+                            player.rect.center = RETURN_SPAWN
                     elif vinyl_door.try_enter(player):
                         vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
                         has_vinyl = any(s and s.name in vinyl_names for s in overlay.hotbar.slots)
                         if has_vinyl:
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                             vinyl_door.transition(display_surface)
                             walk_sound.stop()
                             vinyl_door.load_next_level()
@@ -609,6 +642,13 @@ def run():
 
         resolve_collision(player)
 
+        # Dog catch — if dog rect overlaps player, trigger lose screen
+        if dog.rect.colliderect(player.rect) and not dog._at_bowl:
+            walk_sound.stop()
+            lose_door.transition(display_surface)
+            lose_door.load_next_level()
+            return
+
         # Draw
         display_surface.blit(background_surf, (0, 0))
         display_surface.blit(house_front,     (850, 5))
@@ -624,6 +664,21 @@ def run():
         dog_bowl.draw(display_surface, dog._at_bowl)
         front_door.draw(display_surface)
         vinyl_door.draw(display_surface)
+
+        if DEBUG_COLLISIONS:
+            pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)
+            # Collision rect glow
+            for col_rect in COLLISION_RECTS:
+                glow = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
+                glow.fill((255, 0, 0, pulse))
+                display_surface.blit(glow, col_rect.topleft)
+                pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
+            # Agro ring around the dog — pulsing red circle
+            agro_r = Dog.AGRO_RADIUS
+            agro_surf = pygame.Surface((agro_r * 2, agro_r * 2), pygame.SRCALPHA)
+            pygame.draw.circle(agro_surf, (255, 0, 0, pulse // 2),         (agro_r, agro_r), agro_r)
+            pygame.draw.circle(agro_surf, (255, 0, 0, min(255, pulse + 80)), (agro_r, agro_r), agro_r, 2)
+            display_surface.blit(agro_surf, (int(dog.pos.x) - agro_r, int(dog.pos.y) - agro_r))
 
         if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
             _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))

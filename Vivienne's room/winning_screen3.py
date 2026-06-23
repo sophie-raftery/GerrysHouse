@@ -142,14 +142,22 @@ def run():
 
 
 def _load_level4():
-    """Load Level 4 after the winning screen."""
-    import importlib.util
+    """Load Level 4 after the winning screen, carrying the hotbar over."""
+    import importlib.util, sys
+    _LVL1 = os.path.join(_ROOT, 'Level1')
+    if _LVL1 not in sys.path:
+        sys.path.insert(0, _LVL1)
+    import shared_state
+
     lvl4_path = os.path.join(_ROOT, "Level 4", "Lvl 4.py")
     spec   = importlib.util.spec_from_file_location("_lvl4", lvl4_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     if hasattr(module, "run"):
-        module.run()
+        # Pass whatever hotbar was saved by Lvl 3 into Level 4
+        slots = getattr(shared_state, 'incoming_hotbar_slots', None)
+        module.run(incoming_hotbar_slots=slots)
+        shared_state.incoming_hotbar_slots = None  # consumed
 
 
 if __name__ == "__main__":

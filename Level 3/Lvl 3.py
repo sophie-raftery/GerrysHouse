@@ -157,13 +157,14 @@ def run(incoming_hotbar_slots=None):
     overlay = Overlay(Player)
 
     # Restore items carried in from a previous level
+    import shared_state
     if incoming_hotbar_slots:
         for i, item in enumerate(incoming_hotbar_slots):
             overlay.hotbar.slots[i] = item
-
-    # TODO: Remove this temporary key for testing
-    room_key = InventoryItem("Room_Key", "Key Item", "images/Key.png")
-    overlay.hotbar.add_item_first_free(room_key)
+    elif getattr(shared_state, 'incoming_hotbar_slots', None):
+        for i, item in enumerate(shared_state.incoming_hotbar_slots):
+            overlay.hotbar.slots[i] = item
+        shared_state.incoming_hotbar_slots = None
 
     # Garage door — centre of the map, leads to Garage Lvl 3
     garage_door = Door(
@@ -228,11 +229,23 @@ def run(incoming_hotbar_slots=None):
                 if event.key == pygame.K_e:
                     if garage_door.try_enter(player):
                         import shared_state
-                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
+                        shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
+                        shared_state.returned_hotbar_slots = None
+                        shared_state.return_spawn          = None  # garage will set it
                         garage_door.transition(display_surface)
                         garage_door.load_next_level()
+                        if shared_state.returned_hotbar_slots is not None:
+                            for i, item in enumerate(shared_state.returned_hotbar_slots):
+                                overlay.hotbar.slots[i] = item
+                        # Respawn player at garage-defined position
+                        spawn = getattr(shared_state, 'return_spawn', None) or (600, 400)
+                        player.image = pygame.image.load(r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
+                        player.rect.center = spawn
+                        shared_state.return_spawn = None
                     elif vinyl_door.try_enter(player):
                         if any(s and s.name in _vinyl_names for s in overlay.hotbar.slots):
+                            import shared_state
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                             vinyl_door.transition(display_surface)
                             walk_sound.stop()
                             vinyl_door.load_next_level()
