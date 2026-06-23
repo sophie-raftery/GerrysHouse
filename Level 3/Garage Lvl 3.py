@@ -72,10 +72,12 @@ class Player(pygame.sprite.Sprite):
 
 
 # ---------------------------------------------------------------------------
-# Father — patrol NPC with full 4-direction animation, same patrol as Mother
+# Father — walks back and forth in lower garage; pauses at car every 2nd lap
 # ---------------------------------------------------------------------------
 class Father(pygame.sprite.Sprite):
     SPEED         = 55
+    CHASE_SPEED   = 120
+    AGRO_RADIUS   = 144          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 200
     FEELER_LEN    = 70
@@ -84,41 +86,52 @@ class Father(pygame.sprite.Sprite):
     AVOID_WEIGHT  = 2.5
     STUCK_DIST    = 4
     STUCK_CHECK   = 1.5
+    CAR_PAUSE_MS  = 6000
 
-    # Patrol the garage — stays clear of the car and walls
+    # Back-and-forth route along the lower region of the garage
     PATROL = [
-        pygame.Vector2(220, 600),   # bottom-left
-        pygame.Vector2(220, 300),   # top-left
-        pygame.Vector2(550, 300),   # top-mid-left  (clear of centre collision)
-        pygame.Vector2(550, 600),   # bottom-mid-left
+        pygame.Vector2(350, 560),   # far left
+        pygame.Vector2(1000, 560),  # far right
     ]
+    # Position in front of the car where he stops to look at it
+    CAR_STOP = pygame.Vector2(640, 520)
 
-    def __init__(self, groups):
+    def __init__(self, groups, player):
         super().__init__(groups)
+        self._player  = player
+        self._chasing = False
         self._anims = {
             'down':  father_walk_down,
             'up':    father_walk_up,
             'right': father_walk_right,
             'left':  father_walk_left,
         }
-        self._facing     = 'down'
+        self._facing     = 'right'
         self._frame_idx  = 0
         self._anim_timer = pygame.time.get_ticks()
         self.image = self._anims[self._facing][0]
         self.rect  = self.image.get_rect(center=(int(self.PATROL[0].x), int(self.PATROL[0].y)))
         self.pos   = pygame.Vector2(self.rect.center)
+
         self._patrol_idx  = 0
         self._waypoint    = pygame.Vector2(self.PATROL[1])
+        self._lap_count   = 0          # increments each time he reaches the far right
+        self._pausing     = False      # True while stopped at car
+        self._pause_timer = 0
+
         self._last_stuck_check  = pygame.time.get_ticks()
         self._pos_at_last_check = pygame.Vector2(self.pos)
 
     def _next_patrol_point(self):
         self._patrol_idx = (self._patrol_idx + 1) % len(self.PATROL)
-        self._waypoint   = pygame.Vector2(self.PATROL[self._patrol_idx])
+        # Count a lap every time he reaches index 1 (far right)
+        if self._patrol_idx == 1:
+            self._lap_count += 1
+        self._waypoint = pygame.Vector2(self.PATROL[self._patrol_idx])
 
     def _update_facing(self, direction):
         if abs(direction.x) >= abs(direction.y):
-            self._facing = 'right' if direction.x > 0 else 'left'
+            self._facing = 'left' if direction.x > 0 else 'right'
         else:
             self._facing = 'down' if direction.y > 0 else 'up'
 
@@ -164,11 +177,51 @@ class Father(pygame.sprite.Sprite):
     def update(self, dt):
         now = pygame.time.get_ticks()
 
+        # --- Pausing at car — agro disabled while stopped -------------------
+        if self._pausing:
+            self._chasing = False
+            self._facing  = 'up'
+            self.image    = self._anims[self._facing][0]
+            if now - self._pause_timer >= self.CAR_PAUSE_MS:
+                self._pausing = False
+                self._waypoint = pygame.Vector2(self.PATROL[self._patrol_idx])
+            return
+
+        # --- Agro check -----------------------------------------------------
+        player_dist = pygame.Vector2(self._player.rect.center).distance_to(self.pos)
+        self._chasing = player_dist <= self.AGRO_RADIUS
+
+        if self._chasing:
+            to_player = pygame.Vector2(self._player.rect.center) - self.pos
+            if to_player.length() > 0:
+                goal_dir = to_player.normalize()
+                move_dir = self._compute_steering(goal_dir)
+                self._update_facing(move_dir)
+                self.pos += move_dir * self.CHASE_SPEED * dt
+                self.rect.center = (int(self.pos.x), int(self.pos.y))
+                self._push_out_of_obstacles()
+            self._tick_animation()
+            return
+        # --------------------------------------------------------------------
+
         to_target = self._waypoint - self.pos
         dist = to_target.length()
 
         if dist <= self.WAYPOINT_DIST or dist == 0:
+            if getattr(self, '_heading_to_car', False):
+                self._pausing        = True
+                self._pause_timer    = now
+                self._heading_to_car = False
+                self._tick_animation()
+                return
+
             self._next_patrol_point()
+            if self._lap_count % 2 == 0 and self._lap_count > 0:
+                self._waypoint       = pygame.Vector2(self.CAR_STOP)
+                self._lap_count      = 0
+                self._heading_to_car = True
+            else:
+                self._heading_to_car = False
             self._tick_animation()
             return
 
@@ -193,7 +246,7 @@ class Father(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = False
+DEBUG_COLLISIONS = True
 
 _WALL_T = 40
 COLLISION_RECTS = [
@@ -292,6 +345,14 @@ def run(incoming_hotbar_slots=None):
         size          = (55, 66),
     )
 
+    # Lose door — triggered when father catches the player
+    lose_door = Door(
+        pos           = (0, 0),
+        target_module = "Vivienne's room/losing _screen1.py",
+        image_path    = None,
+        size          = (1, 1),
+    )
+
     # ---------------------------------------------------------------------------
     # Katy Perry vinyl interaction box
     # ↓↓ Adjust these two lines to reposition / resize the box ↓↓
@@ -357,7 +418,7 @@ def run(incoming_hotbar_slots=None):
     # Sprites
     all_sprites = pygame.sprite.Group()
     player = Player(all_sprites)
-    father = Father(all_sprites)
+    father = Father(all_sprites, player)
 
     # Fade in
     fade_surf = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -403,6 +464,12 @@ def run(incoming_hotbar_slots=None):
         all_sprites.update(dt)
         resolve_collision(player)
 
+        # Father catch — if father touches player while chasing, go to lose screen
+        if father._chasing and father.rect.colliderect(player.rect):
+            lose_door.transition(display_surface)
+            lose_door.load_next_level()
+            return
+
         # Draw — Y-sort each sprite against the car independently
         display_surface.blit(background, (0, 0))
         behind_car  = [s for s in all_sprites if s.rect.bottom < car_rect.centery]
@@ -416,12 +483,40 @@ def run(incoming_hotbar_slots=None):
         vinyl_box.draw(display_surface)
 
         if DEBUG_COLLISIONS:
-            pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)  # 30–150 alpha
+            pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)
             for col_rect in COLLISION_RECTS:
                 glow_surf = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
                 glow_surf.fill((255, 0, 0, pulse))
                 display_surface.blit(glow_surf, col_rect.topleft)
                 pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
+
+            # Agro ring — draw only the arc segments not blocked by collision rects
+            if not father._pausing:
+                agro_r    = Father.AGRO_RADIUS
+                cx, cy    = int(father.pos.x), int(father.pos.y)
+                SEGMENTS  = 72   # number of rays around the circle
+                for i in range(SEGMENTS):
+                    angle = 2 * math.pi * i / SEGMENTS
+                    dx    = math.cos(angle)
+                    dy    = math.sin(angle)
+                    # Ray-march: check if this direction is blocked by a collision rect
+                    blocked = False
+                    for step in range(1, agro_r, 4):
+                        px = cx + dx * step
+                        py = cy + dy * step
+                        for col_rect in COLLISION_RECTS:
+                            if col_rect.collidepoint(px, py):
+                                blocked = True
+                                break
+                        if blocked:
+                            break
+                    if not blocked:
+                        end_x = cx + int(dx * agro_r)
+                        end_y = cy + int(dy * agro_r)
+                        col = (255, 0, 0, min(255, pulse + 80))
+                        dot_surf = pygame.Surface((4, 4), pygame.SRCALPHA)
+                        dot_surf.fill(col)
+                        display_surface.blit(dot_surf, (end_x - 2, end_y - 2))
 
         overlay.display(display_surface)
         pygame.display.update()
