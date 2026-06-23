@@ -118,14 +118,9 @@ class Mother(pygame.sprite.Sprite):
 
     def _update_facing(self, direction):
         if abs(direction.x) >= abs(direction.y):
-            new_facing = 'left' if direction.x > 0 else 'right'
+            self._facing = 'left' if direction.x > 0 else 'right'
         else:
-            new_facing = 'down' if direction.y > 0 else 'up'
-        # Only reset frame index when direction actually changes
-        if new_facing != self._facing:
-            self._facing     = new_facing
-            self._frame_idx  = 0
-            self._anim_timer = pygame.time.get_ticks()
+            self._facing = 'down' if direction.y > 0 else 'up'
 
     def _tick_animation(self):
         now    = pygame.time.get_ticks()
