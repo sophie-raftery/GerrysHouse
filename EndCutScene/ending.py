@@ -92,7 +92,7 @@ class FishCutscene:
         else:
             jarry = self.jarry_grief
 
-        # Jarry behind bowl
+        # Jarry behind fish bowl
         screen.blit(
             jarry,
             (
