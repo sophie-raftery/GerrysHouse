@@ -11,7 +11,7 @@ pygame.display.set_caption("Jarry's House")
 clock = pygame.time.Clock()
 
 # ── Audio ─────────────────────────────────────────────────────────────────────
-pygame.mixer.music.load(join("Daniel's Room", "Audios", "bad.mp3"))
+pygame.mixer.music.load(join("Daniel's Room", "Audios", "loseaudio.mp3"))
 pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(-1)   # loop until they retry or quit
 
@@ -19,7 +19,7 @@ pygame.mixer.music.play(-1)   # loop until they retry or quit
 Sprite = pygame.transform.smoothscale(
     pygame.image.load(join("images", "Player_sprites", "sprite_lose.png")).convert_alpha(),
     (400, 570)
-)
+    )
 
 Retry_button = pygame.image.load(join("images", "buttons", "restart_button.png")).convert_alpha()
 Exit_button  = pygame.image.load(join("images", "buttons", "exit button.png")).convert_alpha()
@@ -51,7 +51,7 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if Retry_rect.collidepoint(event.pos):
                 launch_level1()
-                running = False          # close this screen
+                running = False      # close this screen
 
             elif Exit_rect.collidepoint(event.pos):
                 running = False
