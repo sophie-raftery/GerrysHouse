@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(groups)
         self.image = pygame.transform.scale_by(pygame.image.load(
             r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 1.875)
-        self.rect  = self.image.get_frect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+        self.rect  = self.image.get_frect(center=(640, 650))
         self.direction    = pygame.Vector2()
         self.base_speed   = 150
         self.sprint_speed = 300
@@ -77,7 +77,7 @@ class Player(pygame.sprite.Sprite):
 class Mother(pygame.sprite.Sprite):
     SPEED         = 50
     CHASE_SPEED   = 110
-    AGRO_RADIUS   = 150          # ~3× player sprite width
+    AGRO_RADIUS   = 300          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 200
     FEELER_LEN    = 70
@@ -171,7 +171,17 @@ class Mother(pygame.sprite.Sprite):
 
         # --- Agro check -----------------------------------------------------
         player_dist = pygame.Vector2(self._player.rect.center).distance_to(self.pos)
+        was_chasing  = self._chasing
         self._chasing = player_dist <= self.AGRO_RADIUS
+
+        # Just lost agro — snap waypoint to the closest patrol point
+        if was_chasing and not self._chasing:
+            closest_idx = min(
+                range(len(self.PATROL)),
+                key=lambda i: self.pos.distance_to(self.PATROL[i])
+            )
+            self._patrol_idx = closest_idx
+            self._waypoint   = pygame.Vector2(self.PATROL[self._patrol_idx])
 
         if self._chasing:
             to_player = pygame.Vector2(self._player.rect.center) - self.pos
@@ -313,8 +323,8 @@ def run(incoming_hotbar_slots=None):
         surf.fill(colour)
         return surf
 
-    VINYL_PLAYER_SCALE = 1.0   # ← adjust size here
-    VINYL_PLAYER_POS   = (counter_rect.centerx, counter_rect.top + 40)  # ← adjust position here
+    VINYL_PLAYER_SCALE = 0.5
+    VINYL_PLAYER_POS   = (counter_rect.centerx, counter_rect.top + 180)  # ← adjust position here
 
     vp_with_raw    = _load_or_placeholder("images/vinyl_player(with).png",    (180, 80, 80, 220))
     vp_without_raw = _load_or_placeholder("images/vinyl_player(without).png", (80, 80, 180, 220))
@@ -458,7 +468,10 @@ def run(incoming_hotbar_slots=None):
                             _msg_text  = "You need a vinyl record to leave!"
                             _msg_timer = pygame.time.get_ticks()
                     elif vinyl_player.show_prompt:
-                        vinyl_player.interact(overlay.hotbar)
+                        if vinyl_player.interact(overlay.hotbar):
+                            # Mother gets faster now the vinyl is taken
+                            mother.SPEED       = 90
+                            mother.CHASE_SPEED = 170
 
         exit_door.update(player)
         vinyl_player.update(player, dt)
