@@ -291,6 +291,68 @@ def run(incoming_hotbar_slots=None):
         size          = (55, 66),
     )
 
+    # ---------------------------------------------------------------------------
+    # Katy Perry vinyl interaction box
+    # ↓↓ Adjust these two lines to reposition / resize the box ↓↓
+    VINYL_BOX_POS    = (1125, 225)   # ← world position (x, y)
+    VINYL_BOX_SIZE   = (48, 125)     # ← visual size of the box in pixels
+    VINYL_BOX_SCALE  = 1.0          # ← scale the box image (1.0 = no change)
+    VINYL_BOX_RADIUS = 100          # ← interaction radius in pixels
+    # ↑↑ ----------------------------------------------------------------- ↑↑
+
+    _vb_font = pygame.font.SysFont(None, 20)
+
+    class VinylBox:
+        def __init__(self):
+            self.collected   = False
+            self.show_prompt = False
+            w = int(VINYL_BOX_SIZE[0] * VINYL_BOX_SCALE)
+            h = int(VINYL_BOX_SIZE[1] * VINYL_BOX_SCALE)
+            self.image = pygame.Surface((w, h), pygame.SRCALPHA)
+            self.image.fill((200, 60, 200, 210))
+            pygame.draw.rect(self.image, (140, 20, 140), self.image.get_rect(), 3)
+            # Small vinyl icon
+            cx, cy = w // 2, h // 2
+            pygame.draw.circle(self.image, (20, 20, 20),   (cx, cy), min(w, h) // 3)
+            pygame.draw.circle(self.image, (200, 60, 200), (cx, cy), min(w, h) // 8)
+            self.rect = self.image.get_rect(center=VINYL_BOX_POS)
+            self._prompt_surf = _vb_font.render("[E] Take vinyl", True, (255, 255, 255))
+            self._prompt_shad = _vb_font.render("[E] Take vinyl", True, (0,   0,   0))
+            self._done_surf   = _vb_font.render("Got it!",        True, (120, 255, 120))
+            self._done_shad   = _vb_font.render("Got it!",        True, (0,   0,   0))
+
+        def update(self, player):
+            dist = pygame.Vector2(player.rect.center).distance_to(
+                   pygame.Vector2(VINYL_BOX_POS))
+            self.show_prompt = dist <= VINYL_BOX_RADIUS
+
+        def interact(self, hotbar):
+            if self.collected:
+                return False
+            self.collected = True
+            katie_vinyl = InventoryItem("Katie_Vinyl", "Quest Item",
+                                        "images/items/Vinyl_red.png")
+            hotbar.add_item_first_free(katie_vinyl)
+            return True
+
+        def draw(self, surface):
+            if self.show_prompt and not self.collected:
+                glow = pygame.Surface((self.rect.width + 30,
+                                       self.rect.height + 30), pygame.SRCALPHA)
+                pygame.draw.ellipse(glow, (220, 80, 220, 70), glow.get_rect())
+                surface.blit(glow, glow.get_rect(center=self.rect.center))
+            if not self.collected:
+                surface.blit(self.image, self.rect)
+            if self.show_prompt:
+                lbl  = self._done_surf   if self.collected else self._prompt_surf
+                shad = self._done_shad   if self.collected else self._prompt_shad
+                px = self.rect.centerx - lbl.get_width() // 2
+                py = self.rect.top - 24
+                surface.blit(shad, (px + 1, py + 1))
+                surface.blit(lbl,  (px,     py))
+
+    vinyl_box = VinylBox()
+
     # Sprites
     all_sprites = pygame.sprite.Group()
     player = Player(all_sprites)
@@ -331,8 +393,11 @@ def run(incoming_hotbar_slots=None):
                         exit_door.transition(display_surface)
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                         exit_door.load_next_level()
+                    elif vinyl_box.show_prompt:
+                        vinyl_box.interact(overlay.hotbar)
 
         exit_door.update(player)
+        vinyl_box.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
 
@@ -346,6 +411,7 @@ def run(incoming_hotbar_slots=None):
         for sprite in infront_car:
             display_surface.blit(sprite.image, sprite.rect)
         exit_door.draw(display_surface)
+        vinyl_box.draw(display_surface)
 
         if DEBUG_COLLISIONS:
             pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)  # 30–150 alpha
