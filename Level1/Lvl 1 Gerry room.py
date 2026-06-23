@@ -258,6 +258,12 @@ def run():
     # ---- Hotbar ------------------------------------------------------------
     overlay = Overlay(Player)
 
+    # Restore items the player carried in from Test_level
+    if getattr(shared_state, 'incoming_hotbar_slots', None):
+        for i, item in enumerate(shared_state.incoming_hotbar_slots):
+            overlay.hotbar.slots[i] = item
+        shared_state.incoming_hotbar_slots = None  # consumed
+
     # ---- World objects -----------------------------------------------------
     _VINYL_NAMES = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
 
@@ -313,6 +319,11 @@ def run():
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
+                # DEBUG: press O to add a vinyl record
+                if event.key == pygame.K_o:
+                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
+                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+
                 if event.key == pygame.K_e:
                     ppos = pygame.Vector2(player.rect.center)
 
@@ -336,10 +347,7 @@ def run():
                         if _can_exit(overlay.hotbar):
                             shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                             exit_door.transition(display_surface)
-                            import sys
-                            sys.modules.pop('_next_level', None)
-                            exit_door.load_next_level()
-                            return
+                            return   # resumes Test_level's loop after load_next_level()
 
         make_bed.update(player)
         key_box.update(player)

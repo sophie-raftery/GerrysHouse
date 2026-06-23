@@ -126,6 +126,8 @@ def run(incoming_hotbar_slots=None):
     WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
     display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption('Level 4')
+
+    RETURN_SPAWN = (600, 400)   # ← edit this to change where player appears after leaving Gerry's room
     clock = pygame.time.Clock()
 
     # Background
@@ -209,20 +211,30 @@ def run(incoming_hotbar_slots=None):
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
+                # DEBUG: press O to add a vinyl record
+                if event.key == pygame.K_o:
+                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
+                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+
                 if event.key == pygame.K_e:
                     if front_door.try_enter(player):
                         front_door.transition(display_surface)
                         import shared_state
-                        shared_state.returned_hotbar_slots = None
+                        shared_state.incoming_hotbar_slots  = list(overlay.hotbar.slots)
+                        shared_state.returned_hotbar_slots  = None
                         walk_sound.stop()
                         front_door.load_next_level()
                         if shared_state.returned_hotbar_slots is not None:
                             for i, item in enumerate(shared_state.returned_hotbar_slots):
                                 overlay.hotbar.slots[i] = item
-                        player.rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+                        # Reload sprite from disk and place at return spawn
+                        player.image = pygame.image.load(r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
+                        player.rect.center = RETURN_SPAWN
                     elif vinyl_door.try_enter(player):
                         vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
                         if any(s and s.name in vinyl_names for s in overlay.hotbar.slots):
+                            import shared_state
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                             vinyl_door.transition(display_surface)
                             walk_sound.stop()
                             vinyl_door.load_next_level()

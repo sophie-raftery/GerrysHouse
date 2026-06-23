@@ -173,9 +173,13 @@ def run(incoming_hotbar_slots=None):
     clock = pygame.time.Clock()
 
     # ---- Background --------------------------------------------------------
-    background = pygame.transform.scale(
+    BG_NORMAL = pygame.transform.scale(
         pygame.image.load("images/Gerry's room.png").convert(),
         (WINDOW_WIDTH, WINDOW_HEIGHT))
+    BG_POST = pygame.transform.scale(
+        pygame.image.load("images/Gerry's room post.png").convert(),
+        (WINDOW_WIDTH, WINDOW_HEIGHT))
+    background = BG_NORMAL   # starts on normal background
 
     # ---- Walk animations (2.5× scale to match interior levels) -------------
     walk_forward       = [pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png"), 1.5) for i in range(1, 5)]
@@ -194,12 +198,56 @@ def run(incoming_hotbar_slots=None):
     if incoming_hotbar_slots:
         for i, item in enumerate(incoming_hotbar_slots):
             overlay.hotbar.slots[i] = item
+    elif getattr(shared_state, 'incoming_hotbar_slots', None):
+        for i, item in enumerate(shared_state.incoming_hotbar_slots):
+            overlay.hotbar.slots[i] = item
+        shared_state.incoming_hotbar_slots = None  # consumed
     elif getattr(shared_state, 'returned_hotbar_slots', None):
         for i, item in enumerate(shared_state.returned_hotbar_slots):
             overlay.hotbar.slots[i] = item
 
     # ---- Room objects -------------------------------------------------------
     bed = Bed(pos=(640, 420))
+
+    # Interaction box — press [E] nearby to swap background to post version
+    # ↓↓ Adjust POS to move the box, RADIUS to change interaction range ↓↓
+    INTERACT_BOX_POS    = (200, 350)   # ← position in room
+    INTERACT_BOX_RADIUS = 100          # ← how close player needs to be
+
+    class InteractBox:
+        def __init__(self):
+            self.activated   = False
+            self.show_prompt = False
+            self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
+            self.image.fill((220, 180, 60, 200))
+            pygame.draw.rect(self.image, (160, 110, 20), self.image.get_rect(), 3)
+            self.rect = self.image.get_rect(center=INTERACT_BOX_POS)
+            _font = pygame.font.SysFont(None, 20)
+            self._prompt_surf = _font.render("[E] Interact", True, (255, 255, 255))
+            self._prompt_shad = _font.render("[E] Interact", True, (0,   0,   0))
+            self._done_surf   = _font.render("Done!",        True, (120, 255, 120))
+            self._done_shad   = _font.render("Done!",        True, (0,   0,   0))
+
+        def update(self, player):
+            dist = pygame.Vector2(player.rect.center).distance_to(
+                   pygame.Vector2(INTERACT_BOX_POS))
+            self.show_prompt = dist <= INTERACT_BOX_RADIUS
+
+        def draw(self, surface):
+            if self.show_prompt:
+                glow = pygame.Surface((70, 70), pygame.SRCALPHA)
+                pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
+                surface.blit(glow, glow.get_rect(center=self.rect.center))
+            surface.blit(self.image, self.rect)
+            if self.show_prompt:
+                lbl  = self._done_surf   if self.activated else self._prompt_surf
+                shad = self._done_shad   if self.activated else self._prompt_shad
+                px = self.rect.centerx - lbl.get_width() // 2
+                py = self.rect.top - 24
+                surface.blit(shad, (px + 1, py + 1))
+                surface.blit(lbl,  (px,     py))
+
+    interact_box = InteractBox()
 
     # Exit door – uses the standard Door class; just returns to Level 4
     exit_door = Door(
@@ -240,14 +288,22 @@ def run(incoming_hotbar_slots=None):
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
+                # DEBUG: press O to add a vinyl record
+                if event.key == pygame.K_o:
+                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
+                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
-                        # Fade out, save hotbar, return to Level 4's game loop
                         exit_door.transition(display_surface)
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
-                        return   # resumes Level 4 right after load_next_level()
+                        return
+                    elif interact_box.show_prompt and not interact_box.activated:
+                        interact_box.activated = True
+                        background = BG_POST
 
         bed.update(player)
+        interact_box.update(player)
         exit_door.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
@@ -255,6 +311,7 @@ def run(incoming_hotbar_slots=None):
         # ---- Draw -----------------------------------------------------------
         display_surface.blit(background, (0, 0))
         bed.draw(display_surface)
+        interact_box.draw(display_surface)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
         overlay.display(display_surface)

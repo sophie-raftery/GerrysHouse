@@ -5,7 +5,7 @@ from hotbar import Hotbar, Overlay, InventoryItem
 from door import Door
 
 
-DEBUG_COLLISIONS = True
+DEBUG_COLLISIONS = False
 # GroundItem – an item lying on the ground that the player can pick up
 class GroundItem(pygame.sprite.Sprite):
     PICKUP_RADIUS = 80
@@ -212,6 +212,8 @@ class Player(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 class Dog(pygame.sprite.Sprite):
     SPEED         = 60
+    CHASE_SPEED   = 110          # faster when chasing
+    AGRO_RADIUS   = 150          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 120
     FEELER_LEN    = 70
@@ -233,6 +235,8 @@ class Dog(pygame.sprite.Sprite):
 
     def __init__(self, groups, player):
         super().__init__(groups)
+        self._player      = player          # keep ref for agro checks
+        self._chasing     = False
         self._anims = {
             'down':  dog_walk_up,
             'up':    dog_walk_down,
@@ -327,6 +331,26 @@ class Dog(pygame.sprite.Sprite):
             self.image = self._anims['down'][0]
             return
 
+        # --- Agro check ---------------------------------------------------
+        player_dist = pygame.Vector2(self._player.rect.center).distance_to(self.pos)
+        # Enter chase if player steps into agro ring (and dog isn't distracted)
+        if not self._fetching and not self._at_bowl:
+            self._chasing = player_dist <= self.AGRO_RADIUS
+
+        if self._chasing:
+            # Chase directly toward the player
+            to_player = pygame.Vector2(self._player.rect.center) - self.pos
+            if to_player.length() > 0:
+                goal_dir = to_player.normalize()
+                move_dir = self._compute_steering(goal_dir)
+                self._update_facing(move_dir)
+                self.pos += move_dir * self.CHASE_SPEED * dt
+                self.rect.center = (int(self.pos.x), int(self.pos.y))
+                self._push_out_of_obstacles()
+            self._tick_animation()
+            return
+        # ------------------------------------------------------------------
+
         to_target = self._waypoint - self.pos
         dist = to_target.length()
 
@@ -373,124 +397,10 @@ class Dog(pygame.sprite.Sprite):
 
         self._tick_animation()
 
-# Initialisation
-
-pygame.init()
-WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
-display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-pygame.display.set_caption('Test level')
-
-
-# Background
-background_surf = pygame.image.load("images/garden.png").convert()
-background_surf = pygame.transform.scale(background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT))
-
-# House + dog house
-house_front = pygame.transform.scale(
-    pygame.image.load("images/jarrys_house.png"), (450, 450))
-dog_house = pygame.transform.scale(
-    pygame.image.load("images/dogHouse.png"), (150, 150))
-garage_front = pygame.transform.scale(
-    pygame.image.load("images/Garage(out).png"),(300,300))
-
-# Player walk animations
-player_walk_forward       = [pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png") for i in range(1, 5)]
-player_walk_back          = [pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png") for i in range(1, 5)]
-player_walk_right         = [pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png") for i in range(1, 5)]
-player_walk_left          = [pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png") for i in range(1, 5)]
-player_walk_forward_right = [pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png") for i in range(1, 5)]
-player_walk_forward_left  = [pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png") for i in range(1, 5)]
-
-player_walk_back_right = [
-    pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.65)
-    for i in range(1, 6)]
-player_walk_back_left = [
-    pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.65)
-    for i in range(1, 6)]
-
-
-# Dog sprite animation — 4 frames per direction
-DOG_SCALE = 0.225
-
-def _make_outline(surf, colour=(0, 0, 0, 220), thickness=2):
-    w, h = surf.get_size()
-    outlined = pygame.Surface((w + thickness * 2, h + thickness * 2), pygame.SRCALPHA)
-    mask = pygame.mask.from_surface(surf)
-    outline_surf = mask.to_surface(setcolor=colour, unsetcolor=(0, 0, 0, 0))
-    for dx in range(-thickness, thickness + 1):
-        for dy in range(-thickness, thickness + 1):
-            if dx == 0 and dy == 0:
-                continue
-            outlined.blit(outline_surf, (dx + thickness, dy + thickness))
-    outlined.blit(surf, (thickness, thickness))
-    return outlined
-
-dog_walk_down  = [_make_outline(pygame.transform.scale_by(
-    pygame.image.load(f"images/dogSprite/sprite-1-{i} (3).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
-dog_walk_up    = [_make_outline(pygame.transform.scale_by(
-    pygame.image.load(f"images/dogSprite/sprite-2-{i} (3).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
-dog_walk_right = [_make_outline(pygame.transform.scale_by(
-    pygame.image.load(f"images/dogSprite/sprite-3-{i} (2).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
-dog_walk_left  = [_make_outline(pygame.transform.scale_by(
-    pygame.image.load(f"images/dogSprite/sprite-4-{i} (2).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
-
-# Hotbar / inventory
-overlay = Overlay(Player)
-
-shovel       = InventoryItem("Shovel",       "Tool",       "images/items/Clean_Shovel.png")
-dirty_shovel = InventoryItem("Dirty_Shovel", "Tool",       "images/items/Dirty_Shovel.png")
-dog_bone     = InventoryItem("Dog_Bone",     "Quest Item", "images/items/Dog_Bone.png")
-
-# Ground items
-ground_items_group = pygame.sprite.Group()
-ground_shovel = GroundItem(ground_items_group, shovel, (1220, 420))
-
-# World objects
-dog_bowl   = DogBowl((290, 580))
-dirt_mound = DirtMound((150, 300), dog_bone, dirty_shovel)
-
-# Door — leads to Level 2 (swap target_module when Level 2 exists)
-# Positioned at the front door of the house (~920, 390)
-front_door = Door(
-    pos           = (1004, 320),
-    target_module = "Level1/Lvl 1 Gerry room.py",  # file path — supports spaces
-    image_path    = None,
-    size          = (40, 60),
-)
-
-# Vinyl door — requires a vinyl record; leads to winning screen
-vinyl_door = Door(
-    pos           = (200, 100),
-    target_module = "Vivienne's room/winning_screen1.py",
-    image_path    = None,
-    size          = (50, 70),
-)
-
-# Sprites
-all_sprites = pygame.sprite.Group()
-player = Player(all_sprites)
-dog    = Dog(all_sprites, player)
-
-
 # ---------------------------------------------------------------------------
-# Collision rectangles (shared by player and dog)
+# resolve_collision – defined here so Dog class methods can call it
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = False
-_WALL_T = 40
-
-COLLISION_RECTS = [
-    # Border walls
-    pygame.Rect(0,              0,    1280, _WALL_T),  # top
-    pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),  # bottom
-    pygame.Rect(0,              0,  _WALL_T, 720),     # left
-    pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),     # right
-    # House — top 350px blocked, bottom 100px (porch) walkable
-    pygame.Rect(910, 5,   450, 350),
-    # Dog house
-    pygame.Rect(100, 500, 150, 150),
-    pygame.Rect(5 ,5, 265, 200 )
-]
-
+COLLISION_RECTS = []  # populated inside run()
 
 def resolve_collision(sprite):
     """Push a sprite's rect out of all COLLISION_RECTS using AABB overlap."""
@@ -512,126 +422,279 @@ def resolve_collision(sprite):
             else:
                 sprite.rect.top    = col_rect.bottom
 
-walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-walk_sound.set_volume(0.1)
-
-clock   = pygame.time.Clock()
-running = True
-
-# Timed message (shown near the front door when entry is blocked)
-_msg_text    = ""
-_msg_timer   = 0
-_MSG_DURATION = 2500  # ms
-_msg_font    = pygame.font.SysFont(None, 28)
-
 # ---------------------------------------------------------------------------
-# Game loop
+# run() – entry point; called directly or via door.load_next_level()
 # ---------------------------------------------------------------------------
-while running:
-    dt = clock.tick(100000) / 1000
+def run():
+    global WINDOW_WIDTH, WINDOW_HEIGHT, display_surface, clock
+    global player_walk_forward, player_walk_back, player_walk_right, player_walk_left
+    global player_walk_forward_right, player_walk_forward_left
+    global player_walk_back_right, player_walk_back_left
+    global dog_walk_down, dog_walk_up, dog_walk_right, dog_walk_left
+    global walk_sound, COLLISION_RECTS
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    pygame.init()
+    WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
+    display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    pygame.display.set_caption('Test level')
 
-        if event.type == pygame.KEYDOWN:
-            overlay.hotbar.handle_keypress(event)
+    RETURN_SPAWN = (600, 400)   # ← edit this to change where player appears after leaving Gerry's room
 
-            if event.key == pygame.K_e:
-                mound_dist = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos)
-                bowl_dist  = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)
+    # Background
+    background_surf = pygame.image.load("images/garden.png").convert()
+    background_surf = pygame.transform.scale(background_surf, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
-                if front_door.try_enter(player):
-                    if not dog_bowl.has_bone:
-                        _msg_text  = "You need to distract the dog first!"
-                        _msg_timer = pygame.time.get_ticks()
+    # House + dog house
+    house_front = pygame.transform.scale(
+        pygame.image.load("images/jarrys_house.png"), (450, 450))
+    dog_house = pygame.transform.scale(
+        pygame.image.load("images/dogHouse.png"), (150, 150))
+    garage_front = pygame.transform.scale(
+        pygame.image.load("images/Garage(out).png"),(300,300))
+
+    # Player walk animations
+    player_walk_forward       = [pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (1).png") for i in range(1, 5)]
+    player_walk_back          = [pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (1).png") for i in range(1, 5)]
+    player_walk_right         = [pygame.image.load(rf"images\Player_sprites\sprite-3-{i} (1).png") for i in range(1, 5)]
+    player_walk_left          = [pygame.image.load(rf"images\Player_sprites\sprite-4-{i} (1).png") for i in range(1, 5)]
+    player_walk_forward_right = [pygame.image.load(rf"images\Player_sprites\sprite-5-{i} (1).png") for i in range(1, 5)]
+    player_walk_forward_left  = [pygame.image.load(rf"images\Player_sprites\sprite-6-{i} (1).png") for i in range(1, 5)]
+    player_walk_back_right = [
+        pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-2-{i} (2).png"), 0.65)
+        for i in range(1, 6)]
+    player_walk_back_left = [
+        pygame.transform.scale_by(pygame.image.load(rf"images\Player_sprites\sprite-1-{i} (2).png"), 0.65)
+        for i in range(1, 6)]
+
+    # Dog sprite animation — 4 frames per direction
+    DOG_SCALE = 0.225
+
+    def _make_outline(surf, colour=(0, 0, 0, 220), thickness=2):
+        w, h = surf.get_size()
+        outlined = pygame.Surface((w + thickness * 2, h + thickness * 2), pygame.SRCALPHA)
+        mask = pygame.mask.from_surface(surf)
+        outline_surf = mask.to_surface(setcolor=colour, unsetcolor=(0, 0, 0, 0))
+        for dx in range(-thickness, thickness + 1):
+            for dy in range(-thickness, thickness + 1):
+                if dx == 0 and dy == 0:
+                    continue
+                outlined.blit(outline_surf, (dx + thickness, dy + thickness))
+        outlined.blit(surf, (thickness, thickness))
+        return outlined
+
+    dog_walk_down  = [_make_outline(pygame.transform.scale_by(
+        pygame.image.load(f"images/dogSprite/sprite-1-{i} (3).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
+    dog_walk_up    = [_make_outline(pygame.transform.scale_by(
+        pygame.image.load(f"images/dogSprite/sprite-2-{i} (3).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
+    dog_walk_right = [_make_outline(pygame.transform.scale_by(
+        pygame.image.load(f"images/dogSprite/sprite-3-{i} (2).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
+    dog_walk_left  = [_make_outline(pygame.transform.scale_by(
+        pygame.image.load(f"images/dogSprite/sprite-4-{i} (2).png").convert_alpha(), DOG_SCALE)) for i in range(1, 5)]
+
+    # Hotbar / inventory
+    overlay = Overlay(Player)
+
+    shovel       = InventoryItem("Shovel",       "Tool",       "images/items/Clean_Shovel.png")
+    dirty_shovel = InventoryItem("Dirty_Shovel", "Tool",       "images/items/Dirty_Shovel.png")
+    dog_bone     = InventoryItem("Dog_Bone",     "Quest Item", "images/items/Dog_Bone.png")
+
+    # Restore items returned from Gerry room
+    import shared_state
+    if shared_state.returned_hotbar_slots is not None:
+        for i, item in enumerate(shared_state.returned_hotbar_slots):
+            overlay.hotbar.slots[i] = item
+        shared_state.returned_hotbar_slots = None
+
+    # Ground items
+    ground_items_group = pygame.sprite.Group()
+    ground_shovel = GroundItem(ground_items_group, shovel, (1220, 420))
+
+    # World objects
+    dog_bowl   = DogBowl((290, 580))
+    dirt_mound = DirtMound((150, 300), dog_bone, dirty_shovel)
+
+    # Door — leads to Gerry's room
+    front_door = Door(
+        pos           = (1004, 320),
+        target_module = "Level1/Lvl 1 Gerry room.py",
+        image_path    = None,
+        size          = (40, 60),
+    )
+
+    # Vinyl door — requires a vinyl record; leads to winning screen
+    vinyl_door = Door(
+        pos           = (200, 400),
+        target_module = "Vivienne's room/winning_screen1.py",
+        image_path    = None,
+        size          = (50, 70),
+    )
+
+    # Lose door — used when the dog catches the player (invisible, no fixed pos needed)
+    lose_door = Door(
+        pos           = (0, 0),
+        target_module = "Vivienne's room/losing _screen1.py",
+        image_path    = None,
+        size          = (1, 1),
+    )
+
+    # Sprites
+    all_sprites = pygame.sprite.Group()
+    player = Player(all_sprites)
+    dog    = Dog(all_sprites, player)
+
+    # Collision rectangles
+    _WALL_T = 40
+    COLLISION_RECTS = [
+        pygame.Rect(0,              0,    1280, _WALL_T),
+        pygame.Rect(0,    720 - _WALL_T,  1280, _WALL_T),
+        pygame.Rect(0,              0,  _WALL_T, 720),
+        pygame.Rect(1280 - _WALL_T, 0,  _WALL_T, 720),
+        pygame.Rect(910, 5,   450, 350),
+        pygame.Rect(100, 500, 150, 150),
+        pygame.Rect(5,   5,   265, 200),
+    ]
+
+    walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
+    walk_sound.set_volume(0.1)
+
+    clock  = pygame.time.Clock()
+    running = True
+
+    _msg_text    = ""
+    _msg_timer   = 0
+    _MSG_DURATION = 2500
+    _msg_font    = pygame.font.SysFont(None, 28)
+
+    # ---------------------------------------------------------------------------
+    # Game loop
+    # ---------------------------------------------------------------------------
+    while running:
+        dt = clock.tick(100000) / 1000
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                overlay.hotbar.handle_keypress(event)
+
+                # DEBUG: press O to add a vinyl record
+                if event.key == pygame.K_o:
+                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
+                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+
+                if event.key == pygame.K_e:
+                    mound_dist = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos)
+                    bowl_dist  = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)
+
+                    if front_door.try_enter(player):
+                        if not dog_bowl.has_bone:
+                            _msg_text  = "You need to distract the dog first!"
+                            _msg_timer = pygame.time.get_ticks()
+                        else:
+                            front_door.transition(display_surface)
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
+                            shared_state.returned_hotbar_slots = None
+                            walk_sound.stop()
+                            front_door.load_next_level()
+                            # Gerry room returned — restore hotbar and respawn player
+                            if shared_state.returned_hotbar_slots is not None:
+                                for i, item in enumerate(shared_state.returned_hotbar_slots):
+                                    overlay.hotbar.slots[i] = item
+                            # Reload sprite from disk and place at return spawn
+                            player.image = pygame.image.load(r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
+                            player.rect.center = RETURN_SPAWN
+                    elif vinyl_door.try_enter(player):
+                        vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
+                        has_vinyl = any(s and s.name in vinyl_names for s in overlay.hotbar.slots)
+                        if has_vinyl:
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
+                            vinyl_door.transition(display_surface)
+                            walk_sound.stop()
+                            vinyl_door.load_next_level()
+                        else:
+                            _msg_text  = "You need a vinyl record!"
+                            _msg_timer = pygame.time.get_ticks()
+                    elif mound_dist <= DirtMound.INTERACT_RADIUS:
+                        dirt_mound.try_dig(overlay.hotbar)
+                    elif bowl_dist <= DogBowl.INTERACT_RADIUS:
+                        if dog_bowl.try_place_bone(overlay.hotbar):
+                            dog.go_to_bowl(dog_bowl.pos)
                     else:
-                        front_door.transition(display_surface)
-                        import shared_state
-                        shared_state.returned_hotbar_slots = None  # clear before entering
-                        walk_sound.stop()
-                        front_door.load_next_level()
-                        # Restore hotbar items the player brought back
-                        if shared_state.returned_hotbar_slots is not None:
-                            for i, item in enumerate(shared_state.returned_hotbar_slots):
-                                overlay.hotbar.slots[i] = item
-                        # TODO: remove — spawn player at centre on return
-                        player.rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
-                elif vinyl_door.try_enter(player):
-                    vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
-                    has_vinyl = any(s and s.name in vinyl_names for s in overlay.hotbar.slots)
-                    if has_vinyl:
-                        vinyl_door.transition(display_surface)
-                        walk_sound.stop()
-                        vinyl_door.load_next_level()
-                    else:
-                        _msg_text  = "You need a vinyl record!"
-                        _msg_timer = pygame.time.get_ticks()
-                elif mound_dist <= DirtMound.INTERACT_RADIUS:
-                    dirt_mound.try_dig(overlay.hotbar)
-                elif bowl_dist <= DogBowl.INTERACT_RADIUS:
-                    if dog_bowl.try_place_bone(overlay.hotbar):
-                        dog.go_to_bowl(dog_bowl.pos)
-                else:
-                    for gitem in list(ground_items_group):
-                        dist = pygame.Vector2(player.rect.center).distance_to(gitem.rect.center)
-                        if dist <= GroundItem.PICKUP_RADIUS:
-                            if overlay.hotbar.add_item_first_free(gitem.inventory_item):
-                                gitem.kill()
-                            break
+                        for gitem in list(ground_items_group):
+                            dist = pygame.Vector2(player.rect.center).distance_to(gitem.rect.center)
+                            if dist <= GroundItem.PICKUP_RADIUS:
+                                if overlay.hotbar.add_item_first_free(gitem.inventory_item):
+                                    gitem.kill()
+                                break
 
-    # Proximity prompts
-    for gitem in ground_items_group:
-        gitem.show_prompt = pygame.Vector2(player.rect.center).distance_to(gitem.rect.center) <= GroundItem.PICKUP_RADIUS
-    dog_bowl.show_prompt   = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)   <= DogBowl.INTERACT_RADIUS
-    dirt_mound.show_prompt = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos) <= DirtMound.INTERACT_RADIUS
-    front_door.update(player)
-    vinyl_door.update(player)
+        # Proximity prompts
+        for gitem in ground_items_group:
+            gitem.show_prompt = pygame.Vector2(player.rect.center).distance_to(gitem.rect.center) <= GroundItem.PICKUP_RADIUS
+        dog_bowl.show_prompt   = pygame.Vector2(player.rect.center).distance_to(dog_bowl.pos)   <= DogBowl.INTERACT_RADIUS
+        dirt_mound.show_prompt = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos) <= DirtMound.INTERACT_RADIUS
+        front_door.update(player)
+        vinyl_door.update(player)
 
-    all_sprites.update(dt)
-    ground_items_group.update(dt)
-    dirt_mound.update(dt)
+        all_sprites.update(dt)
+        ground_items_group.update(dt)
+        dirt_mound.update(dt)
+
+        resolve_collision(player)
+
+        # Dog catch — if dog rect overlaps player, trigger lose screen
+        if dog.rect.colliderect(player.rect) and not dog._at_bowl:
+            walk_sound.stop()
+            lose_door.transition(display_surface)
+            lose_door.load_next_level()
+            return
+
+        # Draw
+        display_surface.blit(background_surf, (0, 0))
+        display_surface.blit(house_front,     (850, 5))
+        display_surface.blit(dog_house,       (100, 500))
+        display_surface.blit(garage_front,    (5, 5))
+        player.player_walk_sound()
+        all_sprites.draw(display_surface)
+
+        for gitem in ground_items_group:
+            gitem.draw(display_surface)
+
+        dirt_mound.draw(display_surface)
+        dog_bowl.draw(display_surface, dog._at_bowl)
+        front_door.draw(display_surface)
+        vinyl_door.draw(display_surface)
+
+        if DEBUG_COLLISIONS:
+            pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)
+            # Collision rect glow
+            for col_rect in COLLISION_RECTS:
+                glow = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
+                glow.fill((255, 0, 0, pulse))
+                display_surface.blit(glow, col_rect.topleft)
+                pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
+            # Agro ring around the dog — pulsing red circle
+            agro_r = Dog.AGRO_RADIUS
+            agro_surf = pygame.Surface((agro_r * 2, agro_r * 2), pygame.SRCALPHA)
+            pygame.draw.circle(agro_surf, (255, 0, 0, pulse // 2),         (agro_r, agro_r), agro_r)
+            pygame.draw.circle(agro_surf, (255, 0, 0, min(255, pulse + 80)), (agro_r, agro_r), agro_r, 2)
+            display_surface.blit(agro_surf, (int(dog.pos.x) - agro_r, int(dog.pos.y) - agro_r))
+
+        if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
+            _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))
+            _lbl_shad = _msg_font.render(_msg_text, True, (0, 0, 0))
+            _mx = front_door.rect.centerx - _lbl.get_width() // 2
+            _my = front_door.rect.top - 30
+            display_surface.blit(_lbl_shad, (_mx + 1, _my + 1))
+            display_surface.blit(_lbl,      (_mx,     _my))
+        else:
+            _msg_text = ""
+
+        overlay.display(display_surface)
+        pygame.display.update()
+
+    pygame.quit()
 
 
-    # Collision resolution
-    resolve_collision(player)
-
-    # Draw
-    display_surface.blit(background_surf, (0, 0))
-    display_surface.blit(house_front,     (850, 5))
-    display_surface.blit(dog_house,       (100, 500))
-    display_surface.blit(garage_front, (5,5))
-    player.player_walk_sound()
-    all_sprites.draw(display_surface)
-
-    for gitem in ground_items_group:
-        gitem.draw(display_surface)
-
-    dirt_mound.draw(display_surface)
-    dog_bowl.draw(display_surface, dog._at_bowl)
-    front_door.draw(display_surface)
-    vinyl_door.draw(display_surface)
-
-    if DEBUG_COLLISIONS:
-        pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)  # 30–150 alpha
-        for col_rect in COLLISION_RECTS:
-            glow = pygame.Surface((col_rect.width, col_rect.height), pygame.SRCALPHA)
-            glow.fill((255, 0, 0, pulse))
-            display_surface.blit(glow, col_rect.topleft)
-            pygame.draw.rect(display_surface, (255, 0, 0), col_rect, 2)
-
-    # Draw timed block message near the front door
-    if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
-        _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))
-        _lbl_shad = _msg_font.render(_msg_text, True, (0, 0, 0))
-        _mx = front_door.rect.centerx - _lbl.get_width() // 2
-        _my = front_door.rect.top - 30
-        display_surface.blit(_lbl_shad, (_mx + 1, _my + 1))
-        display_surface.blit(_lbl,      (_mx,     _my))
-    else:
-        _msg_text = ""
-
-    overlay.display(display_surface)
-    pygame.display.update()
-
-pygame.quit()
+if __name__ == "__main__":
+    run()
