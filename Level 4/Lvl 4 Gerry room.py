@@ -68,41 +68,24 @@ def resolve_collision(sprite):
 
 
 # ---------------------------------------------------------------------------
-# Bed – already completed, just decorative + "Bed made" label
+# Bed – uses real bed.png sprite, no interaction
 # ---------------------------------------------------------------------------
 class Bed:
-    INTERACT_RADIUS = 90
+    # ↓↓ Adjust these to reposition / resize ↓↓
+    BED_POS   = (1000, 200)   # ← (x, y) topleft position
+    BED_SIZE  = (220, 160)    # ← (width, height)
+    # ↑↑ ----------------------------------------------------------------- ↑↑
 
-    def __init__(self, pos):
-        self.pos         = pygame.Vector2(pos)
-        self.completed   = True
-        self.show_prompt = False
-
-        self.image = pygame.Surface((96, 64), pygame.SRCALPHA)
-        self.image.fill((180, 150, 130))
-        pygame.draw.rect(self.image, (120, 90, 60), self.image.get_rect(), 4)
-        pygame.draw.rect(self.image, (220, 220, 240), pygame.Rect(10, 10, 76, 24))
-        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-
-        font = pygame.font.SysFont(None, 20)
-        self._done_surf = font.render("Bed made", True, (120, 255, 120))
-        self._done_shad = font.render("Bed made", True, (0,   0,   0))
+    def __init__(self):
+        raw = pygame.image.load("images/bed.png").convert_alpha()
+        self.image = pygame.transform.scale(raw, self.BED_SIZE)
+        self.rect  = self.image.get_rect(topleft=self.BED_POS)
 
     def update(self, player):
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        self.show_prompt = dist <= self.INTERACT_RADIUS
+        pass   # no interaction
 
     def draw(self, surface):
-        if self.show_prompt:
-            glow = pygame.Surface((100, 80), pygame.SRCALPHA)
-            pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
-            surface.blit(glow, glow.get_rect(center=self.rect.center))
         surface.blit(self.image, self.rect)
-        if self.show_prompt:
-            px = self.rect.centerx - self._done_surf.get_width() // 2
-            py = self.rect.top - 22
-            surface.blit(self._done_shad, (px + 1, py + 1))
-            surface.blit(self._done_surf, (px,     py))
 
 
 # ---------------------------------------------------------------------------
@@ -207,11 +190,11 @@ def run(incoming_hotbar_slots=None):
             overlay.hotbar.slots[i] = item
 
     # ---- Room objects -------------------------------------------------------
-    bed = Bed(pos=(640, 420))
+    bed = Bed()
 
     # ── Vinyl player prop – requires all 3 vinyls, swaps background on use ──
-    VINYL_PLAYER_POS    = (200, 350)   # ← position in room
-    VINYL_PLAYER_SCALE  = 0.25         # ← size multiplier
+    VINYL_PLAYER_POS    = (213, 540)   # ← position in room
+    VINYL_PLAYER_SCALE  = 0.3         # ← size multiplier
     VINYL_PLAYER_RADIUS = 120          # ← interaction range in pixels
     VINYLS_REQUIRED     = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}  # all 3 needed
 
@@ -293,6 +276,55 @@ def run(incoming_hotbar_slots=None):
     _MSG_DURATION = 2500
     _msg_font     = pygame.font.SysFont(None, 26)
 
+    # ── Cutscene box – only visible/interactable after vinyls are played ────
+    CUTSCENE_BOX_POS    = (65, 400)   # ← position in room
+    CUTSCENE_BOX_SCALE  = 4.0          # ← size multiplier (1.0 = 44×44 px)
+    CUTSCENE_BOX_RADIUS = 110          # ← interaction range
+
+    _cb_font = pygame.font.SysFont(None, 20)
+
+    class CutsceneBox:
+        def __init__(self):
+            self.show_prompt = False
+            self.triggered   = False
+            base_w = int(44 * CUTSCENE_BOX_SCALE)
+            base_h = int(44 * CUTSCENE_BOX_SCALE)
+            self.image = pygame.Surface((base_w, base_h), pygame.SRCALPHA)
+            self.image.fill((80, 180, 255, 200))
+            pygame.draw.rect(self.image, (40, 100, 200), self.image.get_rect(), max(1, int(3 * CUTSCENE_BOX_SCALE)))
+            # small play triangle, scaled
+            cx, cy = base_w // 2, base_h // 2
+            r = int(14 * CUTSCENE_BOX_SCALE)
+            pts = [(cx - r, cy - r), (cx + r, cy), (cx - r, cy + r)]
+            pygame.draw.polygon(self.image, (255, 255, 255), pts)
+            self.rect = self.image.get_rect(center=CUTSCENE_BOX_POS)
+            self._prompt_surf = _cb_font.render("[E] Watch cutscene", True, (255, 255, 255))
+            self._prompt_shad = _cb_font.render("[E] Watch cutscene", True, (0,   0,   0))
+
+        def update(self, player, vinyls_activated):
+            if not vinyls_activated:
+                self.show_prompt = False
+                return
+            dist = pygame.Vector2(player.rect.center).distance_to(
+                   pygame.Vector2(CUTSCENE_BOX_POS))
+            self.show_prompt = dist <= CUTSCENE_BOX_RADIUS
+
+        def draw(self, surface, vinyls_activated):
+            if not vinyls_activated:
+                return
+            if self.show_prompt:
+                glow = pygame.Surface((74, 74), pygame.SRCALPHA)
+                pygame.draw.ellipse(glow, (100, 200, 255, 70), glow.get_rect())
+                surface.blit(glow, glow.get_rect(center=self.rect.center))
+            surface.blit(self.image, self.rect)
+            if self.show_prompt:
+                px = self.rect.centerx - self._prompt_surf.get_width() // 2
+                py = self.rect.top - 24
+                surface.blit(self._prompt_shad, (px + 1, py + 1))
+                surface.blit(self._prompt_surf, (px,     py))
+
+    cutscene_box = CutsceneBox()
+
     # Exit door – uses the standard Door class; just returns to Level 4
     exit_door = Door(
         pos          = (640, 650),
@@ -350,9 +382,22 @@ def run(incoming_hotbar_slots=None):
                         else:
                             _msg_text  = "Need all 3 vinyls: MJ, Billy Joel & Katie Perry"
                             _msg_timer = pygame.time.get_ticks()
+                    elif cutscene_box.show_prompt and not cutscene_box.triggered:
+                        cutscene_box.triggered = True
+                        # Launch cutscene (blocks until finished / skipped)
+                        import importlib.util
+                        _cs_path = os.path.join(_HERE, '..', 'EndCutScene', 'ending.py')
+                        _cs_spec = importlib.util.spec_from_file_location("_ending", _cs_path)
+                        _cs_mod  = importlib.util.module_from_spec(_cs_spec)
+                        _cs_spec.loader.exec_module(_cs_mod)
+                        _cs_mod.run()
+                        # Restore display after cutscene
+                        display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+                        pygame.display.set_caption("Gerry's Room (Level 4)")
 
         bed.update(player)
         vinyl_player.update(player, overlay.hotbar)
+        cutscene_box.update(player, vinyl_player.activated)
         exit_door.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
@@ -361,6 +406,7 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(background, (0, 0))
         bed.draw(display_surface)
         vinyl_player.draw(display_surface)
+        cutscene_box.draw(display_surface, vinyl_player.activated)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
 

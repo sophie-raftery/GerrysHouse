@@ -1,23 +1,22 @@
-import pygame#
+"""
+ending.py – Fish cutscene. Call run() to play it.
+"""
+
+import pygame
+import os
 from os.path import join
 
-pygame.init()
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.join(_HERE, '..')
 
-WINDOW_SIZE = (1280, 720)
-screen = pygame.display.set_mode(WINDOW_SIZE)
-pygame.display.set_caption("Jarry's House")
 
 class FishCutscene:
 
-
     def __init__(self):
-
         self.active = True
-        self.timer = 0
-        self.stage = 0
-
-        # text
-        self.font = pygame.font.Font(None, 45)
+        self.timer  = 0
+        self.stage  = 0
+        self.font   = pygame.font.Font(None, 45)
 
         self.dialogue = [
             "Patrick?",
@@ -26,141 +25,60 @@ class FishCutscene:
             "It can't be..."
         ]
 
-        # load sprites
-        self.jarry_neutral = pygame.image.load(join("images/Player_Sprites/sprite_cutscene_neutral.png")).convert_alpha()
+        def _load(rel):
+            return pygame.image.load(os.path.join(_ROOT, rel)).convert_alpha()
 
-        self.jarry_sad = pygame.image.load(join("images/Player_Sprites/sprite_cutscene_sad.png")).convert_alpha()
-
-        self.jarry_grief = pygame.image.load(join("images/Player_Sprites/sprite_cutscene_grief.png")).convert_alpha()
-
-        self.fishbowl = pygame.image.load(join("images/fishBowl.png")).convert_alpha()
-
-        self.patrick = pygame.image.load(join("images/patrickFish.png")).convert_alpha()
-
-        # resize sprites
-        self.jarry_neutral = pygame.transform.scale_by(
-            self.jarry_neutral,
-            0.5
-        )
-
-        self.jarry_sad = pygame.transform.scale_by(
-            self.jarry_sad,
-            0.5
-        )
-
-        self.jarry_grief = pygame.transform.scale_by(
-            self.jarry_grief,
-            0.5
-        )
-
-        self.fishbowl = pygame.transform.scale_by(
-            self.fishbowl,
-            1.5
-        )
-
-        self.patrick = pygame.transform.scale_by(
-            self.patrick,
-            0.5
-        )
-
-        #center
-        self.jarry_neutral_rect = self.jarry_neutral.get_rect(center=(640, 300))
+        self.jarry_neutral = pygame.transform.scale_by(_load("images/Player_sprites/sprite_cutscene_neutral.png"), 0.5)
+        self.jarry_sad     = pygame.transform.scale_by(_load("images/Player_sprites/sprite_cutscene_sad.png"),     0.5)
+        self.jarry_grief   = pygame.transform.scale_by(_load("images/Player_sprites/sprite_cutscene_grief.png"),   0.5)
+        self.fishbowl      = pygame.transform.scale_by(_load("images/fishBowl.png"),   1.5)
+        self.patrick       = pygame.transform.scale_by(_load("images/patrickFish.png"), 0.5)
 
     def update(self, dt):
         self.timer += dt
-
-        # change scene every 3 seconds
         if self.timer >= 3:
             self.timer = 0
             self.stage += 1
-
-        # finish cutscene
         if self.stage >= len(self.dialogue):
             self.active = False
 
     def draw(self, screen):
-        # black background
-        screen.fill((0,0,0))
+        screen.fill((0, 0, 0))
 
-        # choose Jarry emotion
-        if self.stage == 0:
-            jarry = self.jarry_neutral
+        jarry = self.jarry_neutral if self.stage == 0 else (
+                self.jarry_sad if self.stage < 3 else self.jarry_grief)
 
-        elif self.stage < 3:
-            jarry = self.jarry_sad
+        screen.blit(jarry,         (500, 60))
+        screen.blit(self.fishbowl, (280, 60))
+        screen.blit(self.patrick,  (560, 230))
 
-        else:
-            jarry = self.jarry_grief
-
-        # Jarry behind fish bowl
-        screen.blit(
-            jarry,
-            (
-                500,
-                60
-            )
-        )
-
-        # fish bowl
-        screen.blit(
-            self.fishbowl,
-            (
-                280,
-                60
-            )
-        )
-
-        # fish
-        screen.blit(
-            self.patrick,
-            (
-                560,
-                230
-            )
-        )
-
-        # dialogue
         if self.stage < len(self.dialogue):
-            text = self.font.render(
-                self.dialogue[self.stage],
-                True,
-                (255,255,255)
-            )
-            screen.blit(
-                text,
-                (
-                    420,
-                    650
-                )
-            )
-
-# Create cutscene
-cutscene = FishCutscene()
-running = True
-
-clock = pygame.time.Clock()
-
-# Main loop
-while running:
-
-    dt = clock.tick(60) / 1000  # seconds since last frame
-
-    for event in pygame.event.get():
-
-        if event.type == pygame.QUIT:
-            running = False
+            text = self.font.render(self.dialogue[self.stage], True, (255, 255, 255))
+            screen.blit(text, (420, 650))
 
 
-    if cutscene.active:
+def run():
+    """Play the cutscene, blocking until it finishes. Safe to call from any level."""
+    pygame.init()
+    screen = pygame.display.set_mode((1280, 720))
+    pygame.display.set_caption("Jarry's House")
+    clock = pygame.time.Clock()
+
+    cutscene = FishCutscene()
+
+    while cutscene.active:
+        dt = clock.tick(60) / 1000
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            if event.type == pygame.KEYDOWN:
+                return   # skip on any key press
         cutscene.update(dt)
         cutscene.draw(screen)
-
-    else:
-        screen.fill((30, 30, 30))
+        pygame.display.update()
 
 
-    pygame.display.update()
-
-
-pygame.quit()
-
+if __name__ == "__main__":
+    os.chdir(_ROOT)
+    run()
+    pygame.quit()
