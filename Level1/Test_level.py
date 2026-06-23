@@ -608,6 +608,7 @@ def run():
                         vinyl_names = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
                         has_vinyl = any(s and s.name in vinyl_names for s in overlay.hotbar.slots)
                         if has_vinyl:
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                             vinyl_door.transition(display_surface)
                             walk_sound.stop()
                             vinyl_door.load_next_level()

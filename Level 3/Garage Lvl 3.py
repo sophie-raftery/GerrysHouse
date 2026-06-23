@@ -279,9 +279,10 @@ def run(incoming_hotbar_slots=None):
     if incoming_hotbar_slots:
         for i, item in enumerate(incoming_hotbar_slots):
             overlay.hotbar.slots[i] = item
-    elif hasattr(shared_state, 'returned_hotbar_slots') and shared_state.returned_hotbar_slots:
-        for i, item in enumerate(shared_state.returned_hotbar_slots):
+    elif getattr(shared_state, 'incoming_hotbar_slots', None):
+        for i, item in enumerate(shared_state.incoming_hotbar_slots):
             overlay.hotbar.slots[i] = item
+        shared_state.incoming_hotbar_slots = None
 
     # Exit door — back to Level 3 garden
     exit_door = Door(
@@ -391,7 +392,8 @@ def run(incoming_hotbar_slots=None):
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
                         exit_door.transition(display_surface)
-                        shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
+                        shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
+                        shared_state.returned_hotbar_slots = None
                         exit_door.load_next_level()
                     elif vinyl_box.show_prompt:
                         vinyl_box.interact(overlay.hotbar)
