@@ -209,45 +209,89 @@ def run(incoming_hotbar_slots=None):
     # ---- Room objects -------------------------------------------------------
     bed = Bed(pos=(640, 420))
 
-    # Interaction box — press [E] nearby to swap background to post version
-    # ↓↓ Adjust POS to move the box, RADIUS to change interaction range ↓↓
-    INTERACT_BOX_POS    = (200, 350)   # ← position in room
-    INTERACT_BOX_RADIUS = 100          # ← how close player needs to be
+    # ── Vinyl player prop – requires all 3 vinyls, swaps background on use ──
+    VINYL_PLAYER_POS    = (200, 350)   # ← position in room
+    VINYL_PLAYER_SCALE  = 0.25         # ← size multiplier
+    VINYL_PLAYER_RADIUS = 120          # ← interaction range in pixels
+    VINYLS_REQUIRED     = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}  # all 3 needed
 
-    class InteractBox:
+    def _load_or_placeholder(path, colour):
+        if os.path.isfile(path):
+            return pygame.image.load(path).convert_alpha()
+        surf = pygame.Surface((80, 80), pygame.SRCALPHA)
+        surf.fill(colour)
+        return surf
+
+    vp_with_img    = pygame.transform.scale_by(
+        _load_or_placeholder("images/vinyl_player(with).png",    (180, 80, 80, 220)), VINYL_PLAYER_SCALE)
+    vp_without_img = pygame.transform.scale_by(
+        _load_or_placeholder("images/vinyl_player(without).png", (80, 80, 180, 220)), VINYL_PLAYER_SCALE)
+
+    _vp_font = pygame.font.SysFont(None, 20)
+
+    class VinylPlayer:
         def __init__(self):
             self.activated   = False
             self.show_prompt = False
-            self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
-            self.image.fill((220, 180, 60, 200))
-            pygame.draw.rect(self.image, (160, 110, 20), self.image.get_rect(), 3)
-            self.rect = self.image.get_rect(center=INTERACT_BOX_POS)
-            _font = pygame.font.SysFont(None, 20)
-            self._prompt_surf = _font.render("[E] Interact", True, (255, 255, 255))
-            self._prompt_shad = _font.render("[E] Interact", True, (0,   0,   0))
-            self._done_surf   = _font.render("Done!",        True, (120, 255, 120))
-            self._done_shad   = _font.render("Done!",        True, (0,   0,   0))
+            self.image       = vp_with_img
+            self.rect        = self.image.get_rect(center=VINYL_PLAYER_POS)
+            self._prompt_surf   = _vp_font.render("[E] Play vinyls (0/3)", True, (255, 255, 255))
+            self._prompt_shad   = _vp_font.render("[E] Play vinyls (0/3)", True, (0,   0,   0))
+            self._locked_surf   = _vp_font.render("Need all 3 vinyls",     True, (255, 120, 120))
+            self._locked_shad   = _vp_font.render("Need all 3 vinyls",     True, (0,   0,   0))
+            self._done_surf     = _vp_font.render("Playing!",              True, (120, 255, 120))
+            self._done_shad     = _vp_font.render("Playing!",              True, (0,   0,   0))
 
-        def update(self, player):
+        def _count_vinyls(self, hotbar):
+            return sum(1 for s in hotbar.slots if s and s.name in VINYLS_REQUIRED)
+
+        def _has_all(self, hotbar):
+            have = {s.name for s in hotbar.slots if s and s.name in VINYLS_REQUIRED}
+            return VINYLS_REQUIRED.issubset(have)
+
+        def update(self, player, hotbar):
             dist = pygame.Vector2(player.rect.center).distance_to(
-                   pygame.Vector2(INTERACT_BOX_POS))
-            self.show_prompt = dist <= INTERACT_BOX_RADIUS
+                   pygame.Vector2(VINYL_PLAYER_POS))
+            self.show_prompt = dist <= VINYL_PLAYER_RADIUS
+            # Refresh prompt text with live count
+            if not self.activated:
+                n = self._count_vinyls(hotbar)
+                txt = f"[E] Play vinyls ({n}/3)"
+                self._prompt_surf = _vp_font.render(txt, True, (255, 255, 255))
+                self._prompt_shad = _vp_font.render(txt, True, (0,   0,   0))
+
+        def interact(self, hotbar):
+            if self.activated:
+                return False
+            if not self._has_all(hotbar):
+                return False
+            self.activated = True
+            self.image = vp_without_img
+            self.rect  = self.image.get_rect(center=VINYL_PLAYER_POS)
+            return True
 
         def draw(self, surface):
-            if self.show_prompt:
-                glow = pygame.Surface((70, 70), pygame.SRCALPHA)
-                pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
-                surface.blit(glow, glow.get_rect(center=self.rect.center))
             surface.blit(self.image, self.rect)
             if self.show_prompt:
-                lbl  = self._done_surf   if self.activated else self._prompt_surf
-                shad = self._done_shad   if self.activated else self._prompt_shad
+                glow = pygame.Surface((self.rect.width + 30,
+                                       self.rect.height + 30), pygame.SRCALPHA)
+                pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
+                surface.blit(glow, glow.get_rect(center=self.rect.center))
+                if self.activated:
+                    lbl, shad = self._done_surf, self._done_shad
+                else:
+                    lbl, shad = self._prompt_surf, self._prompt_shad
                 px = self.rect.centerx - lbl.get_width() // 2
                 py = self.rect.top - 24
                 surface.blit(shad, (px + 1, py + 1))
                 surface.blit(lbl,  (px,     py))
 
-    interact_box = InteractBox()
+    vinyl_player = VinylPlayer()
+
+    _msg_text     = ""
+    _msg_timer    = 0
+    _MSG_DURATION = 2500
+    _msg_font     = pygame.font.SysFont(None, 26)
 
     # Exit door – uses the standard Door class; just returns to Level 4
     exit_door = Door(
@@ -267,6 +311,7 @@ def run(incoming_hotbar_slots=None):
     for alpha in range(255, -1, -6):
         display_surface.blit(background, (0, 0))
         bed.draw(display_surface)
+        vinyl_player.draw(display_surface)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
         overlay.display(display_surface)
@@ -298,12 +343,15 @@ def run(incoming_hotbar_slots=None):
                         exit_door.transition(display_surface)
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                         return
-                    elif interact_box.show_prompt and not interact_box.activated:
-                        interact_box.activated = True
-                        background = BG_POST
+                    elif vinyl_player.show_prompt and not vinyl_player.activated:
+                        if vinyl_player.interact(overlay.hotbar):
+                            background = BG_POST
+                        else:
+                            _msg_text  = "Need all 3 vinyls: MJ, Billy Joel & Katie Perry"
+                            _msg_timer = pygame.time.get_ticks()
 
         bed.update(player)
-        interact_box.update(player)
+        vinyl_player.update(player, overlay.hotbar)
         exit_door.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
@@ -311,9 +359,20 @@ def run(incoming_hotbar_slots=None):
         # ---- Draw -----------------------------------------------------------
         display_surface.blit(background, (0, 0))
         bed.draw(display_surface)
-        interact_box.draw(display_surface)
+        vinyl_player.draw(display_surface)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
+
+        if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
+            lbl  = _msg_font.render(_msg_text, True, (255, 80, 80))
+            shad = _msg_font.render(_msg_text, True, (0,   0,   0))
+            mx = WINDOW_WIDTH  // 2 - lbl.get_width()  // 2
+            my = WINDOW_HEIGHT // 2 - 60
+            display_surface.blit(shad, (mx + 1, my + 1))
+            display_surface.blit(lbl,  (mx,     my))
+        else:
+            _msg_text = ""
+
         overlay.display(display_surface)
         pygame.display.update()
 

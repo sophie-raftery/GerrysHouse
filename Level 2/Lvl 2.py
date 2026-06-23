@@ -200,15 +200,15 @@ def run(incoming_hotbar_slots=None):
             overlay.hotbar.slots[i] = item
         shared_state.incoming_hotbar_slots = None
 
-    # Doors — both lead to Kitchen
-    front_door = KeyedDoor(
+    # Doors — lead to Kitchen (vinyl-locked, does NOT consume vinyl)
+    front_door = Door(
         pos           = (1113, 364),
         target_module = "Level 2/Kitchen Lvl 2.py",
         image_path    = None,
         size          = (55, 66),
     )
 
-    exit_door = KeyedDoor(
+    exit_door = Door(
         pos           = (1113, 364),
         target_module = "Level 2/Kitchen Lvl 2.py",
         image_path    = None,
