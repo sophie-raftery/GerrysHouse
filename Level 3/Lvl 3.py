@@ -231,11 +231,17 @@ def run(incoming_hotbar_slots=None):
                         import shared_state
                         shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                         shared_state.returned_hotbar_slots = None
+                        shared_state.return_spawn          = None  # garage will set it
                         garage_door.transition(display_surface)
                         garage_door.load_next_level()
                         if shared_state.returned_hotbar_slots is not None:
                             for i, item in enumerate(shared_state.returned_hotbar_slots):
                                 overlay.hotbar.slots[i] = item
+                        # Respawn player at garage-defined position
+                        spawn = getattr(shared_state, 'return_spawn', None) or (600, 400)
+                        player.image = pygame.image.load(r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha()
+                        player.rect.center = spawn
+                        shared_state.return_spawn = None
                     elif vinyl_door.try_enter(player):
                         if any(s and s.name in _vinyl_names for s in overlay.hotbar.slots):
                             import shared_state

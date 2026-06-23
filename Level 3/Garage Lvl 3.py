@@ -294,7 +294,7 @@ def run(incoming_hotbar_slots=None):
     pygame.init()
     WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
     display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Garage")
+    pygame.display.set_caption("Gddarage")
     clock = pygame.time.Clock()
 
     # Background
@@ -337,12 +337,17 @@ def run(incoming_hotbar_slots=None):
             overlay.hotbar.slots[i] = item
         shared_state.incoming_hotbar_slots = None
 
+    # ── Adjustable exit door position and player return spawn ──────────────
+    EXIT_DOOR_POS = (116, 180)    # ← move the door here
+    RETURN_SPAWN  = (500, 400)   # ← player appears here in Lvl 3 garden on return
+    GARAGE_SPAWN  = (120, 245)   # ← player appears here when entering garage from garden
+
     # Exit door — back to Level 3 garden
     exit_door = Door(
-        pos           = (640, 650),
+        pos           = EXIT_DOOR_POS,
         target_module = "Level 3/Lvl 3.py",
         image_path    = None,
-        size          = (55, 66),
+        size          = (75, 120),
     )
 
     # Lose door — triggered when father catches the player
@@ -418,6 +423,7 @@ def run(incoming_hotbar_slots=None):
     # Sprites
     all_sprites = pygame.sprite.Group()
     player = Player(all_sprites)
+    player.rect.center = GARAGE_SPAWN   # ← spawn position when entering from garden
     father = Father(all_sprites, player)
 
     # Fade in
@@ -455,6 +461,7 @@ def run(incoming_hotbar_slots=None):
                         exit_door.transition(display_surface)
                         shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                         shared_state.returned_hotbar_slots = None
+                        shared_state.return_spawn          = RETURN_SPAWN
                         exit_door.load_next_level()
                     elif vinyl_box.show_prompt:
                         vinyl_box.interact(overlay.hotbar)
