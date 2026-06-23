@@ -59,11 +59,7 @@ class InteractableBox:
         self.show_prompt = False
 
         self.image = pygame.Surface((48, 48), pygame.SRCALPHA)
-        self.image.fill((160, 110, 50))
-        pygame.draw.rect(self.image, (100, 60, 20), self.image.get_rect(), 3)
-        pygame.draw.rect(self.image, (220, 180, 60), (18, 22, 12, 10))
-        pygame.draw.arc(self.image, (220, 180, 60),
-                        pygame.Rect(18, 15, 12, 14), 0, 3.14159, 3)
+        # Transparent — no visible appearance, hitbox still active
         self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
 
         font = pygame.font.SysFont(None, 20)

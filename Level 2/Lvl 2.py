@@ -200,15 +200,8 @@ def run(incoming_hotbar_slots=None):
             overlay.hotbar.slots[i] = item
         shared_state.incoming_hotbar_slots = None
 
-    # Doors — lead to Kitchen (vinyl-locked, does NOT consume vinyl)
+    # Door — leads to Kitchen
     front_door = Door(
-        pos           = (1113, 364),
-        target_module = "Level 2/Kitchen Lvl 2.py",
-        image_path    = None,
-        size          = (55, 66),
-    )
-
-    exit_door = Door(
         pos           = (1113, 364),
         target_module = "Level 2/Kitchen Lvl 2.py",
         image_path    = None,
@@ -267,22 +260,12 @@ def run(incoming_hotbar_slots=None):
                     overlay.hotbar.add_item_first_free(InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png"))
 
                 if event.key == pygame.K_e:
-                    # Try either door — both have same position but serve same function
-                    if front_door.try_enter_keyed(player, overlay.hotbar):
+                    if front_door.try_enter(player):
                         import shared_state
                         shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
                         shared_state.returned_hotbar_slots = None
                         front_door.transition(display_surface)
                         front_door.load_next_level()
-                        if shared_state.returned_hotbar_slots is not None:
-                            for i, item in enumerate(shared_state.returned_hotbar_slots):
-                                overlay.hotbar.slots[i] = item
-                    elif exit_door.try_enter_keyed(player, overlay.hotbar):
-                        import shared_state
-                        shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
-                        shared_state.returned_hotbar_slots = None
-                        exit_door.transition(display_surface)
-                        exit_door.load_next_level()
                         if shared_state.returned_hotbar_slots is not None:
                             for i, item in enumerate(shared_state.returned_hotbar_slots):
                                 overlay.hotbar.slots[i] = item
@@ -297,7 +280,6 @@ def run(incoming_hotbar_slots=None):
                             _msg_text  = "You need a vinyl record!"
                             _msg_timer = pygame.time.get_ticks()
 
-        exit_door.update(player)
         front_door.update(player)
         vinyl_door.update(player)
         all_sprites.update(dt)
@@ -310,7 +292,6 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(garage_front, (5,5))
         player.player_walk_sound()
         front_door.draw(display_surface)
-        exit_door.draw(display_surface)
         vinyl_door.draw(display_surface)
         all_sprites.draw(display_surface)
 

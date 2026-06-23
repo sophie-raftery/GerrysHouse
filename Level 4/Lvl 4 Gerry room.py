@@ -289,14 +289,8 @@ def run(incoming_hotbar_slots=None):
             self.triggered   = False
             base_w = int(44 * CUTSCENE_BOX_SCALE)
             base_h = int(44 * CUTSCENE_BOX_SCALE)
+            # Invisible surface — glow and prompt shown when nearby
             self.image = pygame.Surface((base_w, base_h), pygame.SRCALPHA)
-            self.image.fill((80, 180, 255, 200))
-            pygame.draw.rect(self.image, (40, 100, 200), self.image.get_rect(), max(1, int(3 * CUTSCENE_BOX_SCALE)))
-            # small play triangle, scaled
-            cx, cy = base_w // 2, base_h // 2
-            r = int(14 * CUTSCENE_BOX_SCALE)
-            pts = [(cx - r, cy - r), (cx + r, cy), (cx - r, cy + r)]
-            pygame.draw.polygon(self.image, (255, 255, 255), pts)
             self.rect = self.image.get_rect(center=CUTSCENE_BOX_POS)
             self._prompt_surf = _cb_font.render("[E] Watch cutscene", True, (255, 255, 255))
             self._prompt_shad = _cb_font.render("[E] Watch cutscene", True, (0,   0,   0))
