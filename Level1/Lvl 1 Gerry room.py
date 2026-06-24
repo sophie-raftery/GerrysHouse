@@ -59,11 +59,7 @@ class InteractableBox:
         self.show_prompt = False
 
         self.image = pygame.Surface((48, 48), pygame.SRCALPHA)
-        self.image.fill((160, 110, 50))
-        pygame.draw.rect(self.image, (100, 60, 20), self.image.get_rect(), 3)
-        pygame.draw.rect(self.image, (220, 180, 60), (18, 22, 12, 10))
-        pygame.draw.arc(self.image, (220, 180, 60),
-                        pygame.Rect(18, 15, 12, 14), 0, 3.14159, 3)
+        # Transparent — no visible appearance, hitbox still active
         self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
 
         font = pygame.font.SysFont(None, 20)
@@ -319,10 +315,11 @@ def run():
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
-                # DEBUG: press O to add a vinyl record
+                # DEBUG: press O to add all 3 vinyls
                 if event.key == pygame.K_o:
-                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
-                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+                    overlay.hotbar.add_item_first_free(InventoryItem("MJ_Vinyl",    "Quest Item", "images/items/Vinyl_white.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Billy_Vinyl", "Quest Item", "images/items/Vinyl_yellow.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png"))
 
                 if event.key == pygame.K_e:
                     ppos = pygame.Vector2(player.rect.center)

@@ -246,7 +246,7 @@ class Father(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = True
+DEBUG_COLLISIONS = False
 
 _WALL_T = 40
 COLLISION_RECTS = [
@@ -375,13 +375,8 @@ def run(incoming_hotbar_slots=None):
             self.show_prompt = False
             w = int(VINYL_BOX_SIZE[0] * VINYL_BOX_SCALE)
             h = int(VINYL_BOX_SIZE[1] * VINYL_BOX_SCALE)
+            # Invisible surface — no appearance at distance
             self.image = pygame.Surface((w, h), pygame.SRCALPHA)
-            self.image.fill((200, 60, 200, 210))
-            pygame.draw.rect(self.image, (140, 20, 140), self.image.get_rect(), 3)
-            # Small vinyl icon
-            cx, cy = w // 2, h // 2
-            pygame.draw.circle(self.image, (20, 20, 20),   (cx, cy), min(w, h) // 3)
-            pygame.draw.circle(self.image, (200, 60, 200), (cx, cy), min(w, h) // 8)
             self.rect = self.image.get_rect(center=VINYL_BOX_POS)
             self._prompt_surf = _vb_font.render("[E] Take vinyl", True, (255, 255, 255))
             self._prompt_shad = _vb_font.render("[E] Take vinyl", True, (0,   0,   0))
@@ -451,10 +446,11 @@ def run(incoming_hotbar_slots=None):
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
-                # DEBUG: press O to add a vinyl record
+                # DEBUG: press O to add all 3 vinyls
                 if event.key == pygame.K_o:
-                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
-                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+                    overlay.hotbar.add_item_first_free(InventoryItem("MJ_Vinyl",    "Quest Item", "images/items/Vinyl_white.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Billy_Vinyl", "Quest Item", "images/items/Vinyl_yellow.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png"))
 
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):

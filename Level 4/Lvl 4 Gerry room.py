@@ -68,41 +68,24 @@ def resolve_collision(sprite):
 
 
 # ---------------------------------------------------------------------------
-# Bed – already completed, just decorative + "Bed made" label
+# Bed – uses real bed.png sprite, no interaction
 # ---------------------------------------------------------------------------
 class Bed:
-    INTERACT_RADIUS = 90
+    # ↓↓ Adjust these to reposition / resize ↓↓
+    BED_POS   = (1000, 200)   # ← (x, y) topleft position
+    BED_SIZE  = (220, 160)    # ← (width, height)
+    # ↑↑ ----------------------------------------------------------------- ↑↑
 
-    def __init__(self, pos):
-        self.pos         = pygame.Vector2(pos)
-        self.completed   = True
-        self.show_prompt = False
-
-        self.image = pygame.Surface((96, 64), pygame.SRCALPHA)
-        self.image.fill((180, 150, 130))
-        pygame.draw.rect(self.image, (120, 90, 60), self.image.get_rect(), 4)
-        pygame.draw.rect(self.image, (220, 220, 240), pygame.Rect(10, 10, 76, 24))
-        self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
-
-        font = pygame.font.SysFont(None, 20)
-        self._done_surf = font.render("Bed made", True, (120, 255, 120))
-        self._done_shad = font.render("Bed made", True, (0,   0,   0))
+    def __init__(self):
+        raw = pygame.image.load("images/bed.png").convert_alpha()
+        self.image = pygame.transform.scale(raw, self.BED_SIZE)
+        self.rect  = self.image.get_rect(topleft=self.BED_POS)
 
     def update(self, player):
-        dist = pygame.Vector2(player.rect.center).distance_to(self.pos)
-        self.show_prompt = dist <= self.INTERACT_RADIUS
+        pass   # no interaction
 
     def draw(self, surface):
-        if self.show_prompt:
-            glow = pygame.Surface((100, 80), pygame.SRCALPHA)
-            pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
-            surface.blit(glow, glow.get_rect(center=self.rect.center))
         surface.blit(self.image, self.rect)
-        if self.show_prompt:
-            px = self.rect.centerx - self._done_surf.get_width() // 2
-            py = self.rect.top - 22
-            surface.blit(self._done_shad, (px + 1, py + 1))
-            surface.blit(self._done_surf, (px,     py))
 
 
 # ---------------------------------------------------------------------------
@@ -207,47 +190,134 @@ def run(incoming_hotbar_slots=None):
             overlay.hotbar.slots[i] = item
 
     # ---- Room objects -------------------------------------------------------
-    bed = Bed(pos=(640, 420))
+    bed = Bed()
 
-    # Interaction box — press [E] nearby to swap background to post version
-    # ↓↓ Adjust POS to move the box, RADIUS to change interaction range ↓↓
-    INTERACT_BOX_POS    = (200, 350)   # ← position in room
-    INTERACT_BOX_RADIUS = 100          # ← how close player needs to be
+    # ── Vinyl player prop – requires all 3 vinyls, swaps background on use ──
+    VINYL_PLAYER_POS    = (213, 540)   # ← position in room
+    VINYL_PLAYER_SCALE  = 0.3         # ← size multiplier
+    VINYL_PLAYER_RADIUS = 120          # ← interaction range in pixels
+    VINYLS_REQUIRED     = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}  # all 3 needed
 
-    class InteractBox:
+    def _load_or_placeholder(path, colour):
+        if os.path.isfile(path):
+            return pygame.image.load(path).convert_alpha()
+        surf = pygame.Surface((80, 80), pygame.SRCALPHA)
+        surf.fill(colour)
+        return surf
+
+    vp_with_img    = pygame.transform.scale_by(
+        _load_or_placeholder("images/vinyl_player(with).png",    (180, 80, 80, 220)), VINYL_PLAYER_SCALE)
+    vp_without_img = pygame.transform.scale_by(
+        _load_or_placeholder("images/vinyl_player(without).png", (80, 80, 180, 220)), VINYL_PLAYER_SCALE)
+
+    _vp_font = pygame.font.SysFont(None, 20)
+
+    class VinylPlayer:
         def __init__(self):
             self.activated   = False
             self.show_prompt = False
-            self.image = pygame.Surface((40, 40), pygame.SRCALPHA)
-            self.image.fill((220, 180, 60, 200))
-            pygame.draw.rect(self.image, (160, 110, 20), self.image.get_rect(), 3)
-            self.rect = self.image.get_rect(center=INTERACT_BOX_POS)
-            _font = pygame.font.SysFont(None, 20)
-            self._prompt_surf = _font.render("[E] Interact", True, (255, 255, 255))
-            self._prompt_shad = _font.render("[E] Interact", True, (0,   0,   0))
-            self._done_surf   = _font.render("Done!",        True, (120, 255, 120))
-            self._done_shad   = _font.render("Done!",        True, (0,   0,   0))
+            self.image       = vp_with_img
+            self.rect        = self.image.get_rect(center=VINYL_PLAYER_POS)
+            self._prompt_surf   = _vp_font.render("[E] Play vinyls (0/3)", True, (255, 255, 255))
+            self._prompt_shad   = _vp_font.render("[E] Play vinyls (0/3)", True, (0,   0,   0))
+            self._locked_surf   = _vp_font.render("Need all 3 vinyls",     True, (255, 120, 120))
+            self._locked_shad   = _vp_font.render("Need all 3 vinyls",     True, (0,   0,   0))
+            self._done_surf     = _vp_font.render("Playing!",              True, (120, 255, 120))
+            self._done_shad     = _vp_font.render("Playing!",              True, (0,   0,   0))
 
-        def update(self, player):
+        def _count_vinyls(self, hotbar):
+            return sum(1 for s in hotbar.slots if s and s.name in VINYLS_REQUIRED)
+
+        def _has_all(self, hotbar):
+            have = {s.name for s in hotbar.slots if s and s.name in VINYLS_REQUIRED}
+            return VINYLS_REQUIRED.issubset(have)
+
+        def update(self, player, hotbar):
             dist = pygame.Vector2(player.rect.center).distance_to(
-                   pygame.Vector2(INTERACT_BOX_POS))
-            self.show_prompt = dist <= INTERACT_BOX_RADIUS
+                   pygame.Vector2(VINYL_PLAYER_POS))
+            self.show_prompt = dist <= VINYL_PLAYER_RADIUS
+            # Refresh prompt text with live count
+            if not self.activated:
+                n = self._count_vinyls(hotbar)
+                txt = f"[E] Play vinyls ({n}/3)"
+                self._prompt_surf = _vp_font.render(txt, True, (255, 255, 255))
+                self._prompt_shad = _vp_font.render(txt, True, (0,   0,   0))
+
+        def interact(self, hotbar):
+            if self.activated:
+                return False
+            if not self._has_all(hotbar):
+                return False
+            self.activated = True
+            self.image = vp_without_img
+            self.rect  = self.image.get_rect(center=VINYL_PLAYER_POS)
+            return True
 
         def draw(self, surface):
-            if self.show_prompt:
-                glow = pygame.Surface((70, 70), pygame.SRCALPHA)
-                pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
-                surface.blit(glow, glow.get_rect(center=self.rect.center))
             surface.blit(self.image, self.rect)
             if self.show_prompt:
-                lbl  = self._done_surf   if self.activated else self._prompt_surf
-                shad = self._done_shad   if self.activated else self._prompt_shad
+                glow = pygame.Surface((self.rect.width + 30,
+                                       self.rect.height + 30), pygame.SRCALPHA)
+                pygame.draw.ellipse(glow, (255, 220, 100, 70), glow.get_rect())
+                surface.blit(glow, glow.get_rect(center=self.rect.center))
+                if self.activated:
+                    lbl, shad = self._done_surf, self._done_shad
+                else:
+                    lbl, shad = self._prompt_surf, self._prompt_shad
                 px = self.rect.centerx - lbl.get_width() // 2
                 py = self.rect.top - 24
                 surface.blit(shad, (px + 1, py + 1))
                 surface.blit(lbl,  (px,     py))
 
-    interact_box = InteractBox()
+    vinyl_player = VinylPlayer()
+
+    _msg_text     = ""
+    _msg_timer    = 0
+    _MSG_DURATION = 2500
+    _msg_font     = pygame.font.SysFont(None, 26)
+
+    # ── Cutscene box – only visible/interactable after vinyls are played ────
+    CUTSCENE_BOX_POS    = (65, 400)   # ← position in room
+    CUTSCENE_BOX_SCALE  = 4.0          # ← size multiplier (1.0 = 44×44 px)
+    CUTSCENE_BOX_RADIUS = 110          # ← interaction range
+
+    _cb_font = pygame.font.SysFont(None, 20)
+
+    class CutsceneBox:
+        def __init__(self):
+            self.show_prompt = False
+            self.triggered   = False
+            base_w = int(44 * CUTSCENE_BOX_SCALE)
+            base_h = int(44 * CUTSCENE_BOX_SCALE)
+            # Invisible surface — glow and prompt shown when nearby
+            self.image = pygame.Surface((base_w, base_h), pygame.SRCALPHA)
+            self.rect = self.image.get_rect(center=CUTSCENE_BOX_POS)
+            self._prompt_surf = _cb_font.render("[E] Watch cutscene", True, (255, 255, 255))
+            self._prompt_shad = _cb_font.render("[E] Watch cutscene", True, (0,   0,   0))
+
+        def update(self, player, vinyls_activated):
+            if not vinyls_activated:
+                self.show_prompt = False
+                return
+            dist = pygame.Vector2(player.rect.center).distance_to(
+                   pygame.Vector2(CUTSCENE_BOX_POS))
+            self.show_prompt = dist <= CUTSCENE_BOX_RADIUS
+
+        def draw(self, surface, vinyls_activated):
+            if not vinyls_activated:
+                return
+            if self.show_prompt:
+                glow = pygame.Surface((74, 74), pygame.SRCALPHA)
+                pygame.draw.ellipse(glow, (100, 200, 255, 70), glow.get_rect())
+                surface.blit(glow, glow.get_rect(center=self.rect.center))
+            surface.blit(self.image, self.rect)
+            if self.show_prompt:
+                px = self.rect.centerx - self._prompt_surf.get_width() // 2
+                py = self.rect.top - 24
+                surface.blit(self._prompt_shad, (px + 1, py + 1))
+                surface.blit(self._prompt_surf, (px,     py))
+
+    cutscene_box = CutsceneBox()
 
     # Exit door – uses the standard Door class; just returns to Level 4
     exit_door = Door(
@@ -267,6 +337,7 @@ def run(incoming_hotbar_slots=None):
     for alpha in range(255, -1, -6):
         display_surface.blit(background, (0, 0))
         bed.draw(display_surface)
+        vinyl_player.draw(display_surface)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
         overlay.display(display_surface)
@@ -288,22 +359,39 @@ def run(incoming_hotbar_slots=None):
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
-                # DEBUG: press O to add a vinyl record
+                # DEBUG: press O to add all 3 vinyls
                 if event.key == pygame.K_o:
-                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
-                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+                    overlay.hotbar.add_item_first_free(InventoryItem("MJ_Vinyl",    "Quest Item", "images/items/Vinyl_white.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Billy_Vinyl", "Quest Item", "images/items/Vinyl_yellow.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png"))
 
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
                         exit_door.transition(display_surface)
                         shared_state.returned_hotbar_slots = list(overlay.hotbar.slots)
                         return
-                    elif interact_box.show_prompt and not interact_box.activated:
-                        interact_box.activated = True
-                        background = BG_POST
+                    elif vinyl_player.show_prompt and not vinyl_player.activated:
+                        if vinyl_player.interact(overlay.hotbar):
+                            background = BG_POST
+                        else:
+                            _msg_text  = "Need all 3 vinyls: MJ, Billy Joel & Katie Perry"
+                            _msg_timer = pygame.time.get_ticks()
+                    elif cutscene_box.show_prompt and not cutscene_box.triggered:
+                        cutscene_box.triggered = True
+                        # Launch cutscene (blocks until finished / skipped)
+                        import importlib.util
+                        _cs_path = os.path.join(_HERE, '..', 'EndCutScene', 'ending.py')
+                        _cs_spec = importlib.util.spec_from_file_location("_ending", _cs_path)
+                        _cs_mod  = importlib.util.module_from_spec(_cs_spec)
+                        _cs_spec.loader.exec_module(_cs_mod)
+                        _cs_mod.run()
+                        # Restore display after cutscene
+                        display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+                        pygame.display.set_caption("Gerry's Room (Level 4)")
 
         bed.update(player)
-        interact_box.update(player)
+        vinyl_player.update(player, overlay.hotbar)
+        cutscene_box.update(player, vinyl_player.activated)
         exit_door.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
@@ -311,9 +399,21 @@ def run(incoming_hotbar_slots=None):
         # ---- Draw -----------------------------------------------------------
         display_surface.blit(background, (0, 0))
         bed.draw(display_surface)
-        interact_box.draw(display_surface)
+        vinyl_player.draw(display_surface)
+        cutscene_box.draw(display_surface, vinyl_player.activated)
         exit_door.draw(display_surface)
         all_sprites.draw(display_surface)
+
+        if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
+            lbl  = _msg_font.render(_msg_text, True, (255, 80, 80))
+            shad = _msg_font.render(_msg_text, True, (0,   0,   0))
+            mx = WINDOW_WIDTH  // 2 - lbl.get_width()  // 2
+            my = WINDOW_HEIGHT // 2 - 60
+            display_surface.blit(shad, (mx + 1, my + 1))
+            display_surface.blit(lbl,  (mx,     my))
+        else:
+            _msg_text = ""
+
         overlay.display(display_surface)
         pygame.display.update()
 

@@ -20,10 +20,8 @@ class Door:
             raw = pygame.image.load(image_path).convert_alpha()
             self.image = pygame.transform.scale(raw, size)
         else:
-            # Placeholder: a warm amber rectangle so you can see it in the world
+            # Invisible — no appearance at distance, glow+prompt shown when nearby
             self.image = pygame.Surface(size, pygame.SRCALPHA)
-            self.image.fill((200, 140, 60, 220))
-            pygame.draw.rect(self.image, (120, 70, 20), self.image.get_rect(), 3)
 
         self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
 

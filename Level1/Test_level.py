@@ -578,10 +578,11 @@ def run():
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
-                # DEBUG: press O to add a vinyl record
+                # DEBUG: press O to add all 3 vinyls
                 if event.key == pygame.K_o:
-                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
-                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+                    overlay.hotbar.add_item_first_free(InventoryItem("MJ_Vinyl",    "Quest Item", "images/items/Vinyl_white.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Billy_Vinyl", "Quest Item", "images/items/Vinyl_yellow.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png"))
 
                 if event.key == pygame.K_e:
                     mound_dist = pygame.Vector2(player.rect.center).distance_to(dirt_mound.pos)

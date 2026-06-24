@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(groups)
         self.image = pygame.transform.scale_by(pygame.image.load(
             r'images\Player_sprites\sprite-1-1 (1).png').convert_alpha(), 1.875)
-        self.rect  = self.image.get_frect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+        self.rect  = self.image.get_frect(center=(640, 650))
         self.direction    = pygame.Vector2()
         self.base_speed   = 150
         self.sprint_speed = 300
@@ -77,7 +77,7 @@ class Player(pygame.sprite.Sprite):
 class Mother(pygame.sprite.Sprite):
     SPEED         = 50
     CHASE_SPEED   = 110
-    AGRO_RADIUS   = 150          # ~3× player sprite width
+    AGRO_RADIUS   = 300          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 200
     FEELER_LEN    = 70
@@ -171,7 +171,17 @@ class Mother(pygame.sprite.Sprite):
 
         # --- Agro check -----------------------------------------------------
         player_dist = pygame.Vector2(self._player.rect.center).distance_to(self.pos)
+        was_chasing  = self._chasing
         self._chasing = player_dist <= self.AGRO_RADIUS
+
+        # Just lost agro — snap waypoint to the closest patrol point
+        if was_chasing and not self._chasing:
+            closest_idx = min(
+                range(len(self.PATROL)),
+                key=lambda i: self.pos.distance_to(self.PATROL[i])
+            )
+            self._patrol_idx = closest_idx
+            self._waypoint   = pygame.Vector2(self.PATROL[self._patrol_idx])
 
         if self._chasing:
             to_player = pygame.Vector2(self._player.rect.center) - self.pos
@@ -215,7 +225,7 @@ class Mother(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = True
+DEBUG_COLLISIONS = False
 
 _WALL_T = 40
 COLLISION_RECTS = [
@@ -288,6 +298,11 @@ def run(incoming_hotbar_slots=None):
     pygame.display.set_caption("Kitchen")
     clock = pygame.time.Clock()
 
+    # ── Adjustable positions ────────────────────────────────────────────────
+    EXIT_DOOR_POS  = (640, 650)   # ← exit door position inside kitchen
+    RETURN_SPAWN   = (640, 400)   # ← player appears here in Lvl 2 garden on return
+    KITCHEN_SPAWN  = (640, 580)   # ← player appears here when entering kitchen from garden
+
     # Background
     background = pygame.image.load("images/kitchen.png").convert()
     background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -308,8 +323,8 @@ def run(incoming_hotbar_slots=None):
         surf.fill(colour)
         return surf
 
-    VINYL_PLAYER_SCALE = 1.0   # ← adjust size here
-    VINYL_PLAYER_POS   = (counter_rect.centerx, counter_rect.top + 40)  # ← adjust position here
+    VINYL_PLAYER_SCALE = 0.5
+    VINYL_PLAYER_POS   = (counter_rect.centerx, counter_rect.top + 180)  # ← adjust position here
 
     vp_with_raw    = _load_or_placeholder("images/vinyl_player(with).png",    (180, 80, 80, 220))
     vp_without_raw = _load_or_placeholder("images/vinyl_player(without).png", (80, 80, 180, 220))
@@ -339,10 +354,6 @@ def run(incoming_hotbar_slots=None):
             self.collected = True
             self.image = vp_without_img
             self.rect  = self.image.get_rect(center=VINYL_PLAYER_POS)
-            billy_vinyl = InventoryItem("Billy_Vinyl", "Quest Item",
-                                        "images/items/Vinyl_yellow.png")
-            hotbar.add_item_first_free(billy_vinyl)
-            return True
             billy_vinyl = InventoryItem("Billy_Vinyl", "Quest Item",
                                         "images/items/Vinyl_yellow.png")
             hotbar.add_item_first_free(billy_vinyl)
@@ -388,12 +399,18 @@ def run(incoming_hotbar_slots=None):
             overlay.hotbar.slots[i] = item
         shared_state.incoming_hotbar_slots = None
 
-    # Exit door — back to garden
+    # Exit door — back to garden (vinyl-locked, does NOT consume vinyl)
     exit_door = Door(
-        pos           = (640, 650),
+        pos           = EXIT_DOOR_POS,
         target_module = "Level 2/Lvl 2.py",
         image_path    = None,
         size          = (55, 66),)
+
+    _vinyl_names  = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
+    _msg_text     = ""
+    _msg_timer    = 0
+    _MSG_DURATION = 2500
+    _msg_font     = pygame.font.SysFont(None, 28)
 
     # Lose door — triggered when mother catches the player
     lose_door = Door(
@@ -406,6 +423,7 @@ def run(incoming_hotbar_slots=None):
     # Sprites
     all_sprites = pygame.sprite.Group()
     player = Player(all_sprites)
+    player.rect.center = KITCHEN_SPAWN   # ← spawn position when entering from garden
     mother = Mother(all_sprites, player)
 
     # Fade in
@@ -432,19 +450,28 @@ def run(incoming_hotbar_slots=None):
             if event.type == pygame.KEYDOWN:
                 overlay.hotbar.handle_keypress(event)
 
-                # DEBUG: press O to add a vinyl record
+                # DEBUG: press O to add all 3 vinyls
                 if event.key == pygame.K_o:
-                    _dbg_vinyl = InventoryItem("MJ_Vinyl", "Quest Item", "images/items/Vinyl_white.png")
-                    overlay.hotbar.add_item_first_free(_dbg_vinyl)
+                    overlay.hotbar.add_item_first_free(InventoryItem("MJ_Vinyl",    "Quest Item", "images/items/Vinyl_white.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Billy_Vinyl", "Quest Item", "images/items/Vinyl_yellow.png"))
+                    overlay.hotbar.add_item_first_free(InventoryItem("Katie_Vinyl", "Quest Item", "images/items/Vinyl_red.png"))
 
                 if event.key == pygame.K_e:
                     if exit_door.try_enter(player):
-                        exit_door.transition(display_surface)
-                        shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
-                        shared_state.returned_hotbar_slots = None
-                        exit_door.load_next_level()
+                        if any(s and s.name in _vinyl_names for s in overlay.hotbar.slots):
+                            exit_door.transition(display_surface)
+                            shared_state.incoming_hotbar_slots = list(overlay.hotbar.slots)
+                            shared_state.returned_hotbar_slots = None
+                            shared_state.return_spawn          = RETURN_SPAWN
+                            exit_door.load_next_level()
+                        else:
+                            _msg_text  = "You need a vinyl record to leave!"
+                            _msg_timer = pygame.time.get_ticks()
                     elif vinyl_player.show_prompt:
-                        vinyl_player.interact(overlay.hotbar)
+                        if vinyl_player.interact(overlay.hotbar):
+                            # Mother gets faster now the vinyl is taken
+                            mother.SPEED       = 90
+                            mother.CHASE_SPEED = 170
 
         exit_door.update(player)
         vinyl_player.update(player, dt)
@@ -486,6 +513,16 @@ def run(incoming_hotbar_slots=None):
             display_surface.blit(sprite.image, sprite.rect)
 
         exit_door.draw(display_surface)
+
+        if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
+            _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))
+            _lbl_shad = _msg_font.render(_msg_text, True, (0, 0, 0))
+            _mx = exit_door.rect.centerx - _lbl.get_width() // 2
+            _my = exit_door.rect.top - 30
+            display_surface.blit(_lbl_shad, (_mx + 1, _my + 1))
+            display_surface.blit(_lbl,      (_mx,     _my))
+        else:
+            _msg_text = ""
 
         if DEBUG_COLLISIONS:
             pulse = int(abs(math.sin(pygame.time.get_ticks() / 300)) * 120 + 30)
