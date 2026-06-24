@@ -349,6 +349,20 @@ section {
 }
 
 /* ============================================
+   DOWNLOAD GAME BUTTON
+   ============================================ */
+.play-button {
+    font-family:'Press Start 2P', monospace;
+    font-size:1rem;
+    padding:20px;
+    background: #fdcb6e;
+    border:4px solid black;
+    cursor:pointer;
+    display:block;
+    margin:0 auto;
+}
+
+/* ============================================
    FOOTER
    ============================================ */
 .footer {
@@ -438,6 +452,19 @@ section {
   overflow: hidden;
   text-align: center;
   padding: 6rem 1.5rem 4rem;
+}
+
+.hero__about__us {
+  min-height: 100vh; /* Make the hero at least as tall as the screen. (view-height) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; /* normal position in the document flow, enabling adjustments without affecting the layout of surrounding elements. */
+  background-image: url("/website/images/about_team.jpeg");
+  background-position: center;
+  overflow: hidden;
+  text-align: center;
+  padding: 6rem 1.5rem 4rem;  
 }
 
 .hero__content {
@@ -572,10 +599,11 @@ section {
 }
 
 .overview__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 3rem;
-  align-items: start;
 }
 
 .overview__text p {
@@ -949,7 +977,7 @@ section {
 
 .tip-box ul li {
   padding: 0.5rem 0;
-  color: var(--text);
+  color: #b8a1d9;
   font-size: 0.88rem;
   line-height: 1.7;
   border-bottom: 1px dotted rgba(162, 155, 254, 0.2);

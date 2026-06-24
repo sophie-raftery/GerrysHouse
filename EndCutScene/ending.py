@@ -38,30 +38,15 @@ class FishCutscene:
         self.patrick = pygame.image.load(join("images/patrickFish.png")).convert_alpha()
 
         # resize sprites
-        self.jarry_neutral = pygame.transform.scale_by(
-            self.jarry_neutral,
-            0.5
-        )
+        self.jarry_neutral = pygame.transform.scale_by(self.jarry_neutral,0.5)
 
-        self.jarry_sad = pygame.transform.scale_by(
-            self.jarry_sad,
-            0.5
-        )
+        self.jarry_sad = pygame.transform.scale_by(self.jarry_sad,0.5)
 
-        self.jarry_grief = pygame.transform.scale_by(
-            self.jarry_grief,
-            0.5
-        )
+        self.jarry_grief = pygame.transform.scale_by(self.jarry_grief,0.5)
 
-        self.fishbowl = pygame.transform.scale_by(
-            self.fishbowl,
-            1.5
-        )
+        self.fishbowl = pygame.transform.scale_by(self.fishbowl,1.5)
 
-        self.patrick = pygame.transform.scale_by(
-            self.patrick,
-            0.5
-        )
+        self.patrick = pygame.transform.scale_by(self.patrick,0.5)
 
         #center
         self.jarry_neutral_rect = self.jarry_neutral.get_rect(center=(640, 300))
@@ -93,46 +78,18 @@ class FishCutscene:
             jarry = self.jarry_grief
 
         # Jarry behind fish bowl
-        screen.blit(
-            jarry,
-            (
-                500,
-                60
-            )
-        )
+        screen.blit(jarry,(500,60))
 
         # fish bowl
-        screen.blit(
-            self.fishbowl,
-            (
-                280,
-                60
-            )
-        )
+        screen.blit(self.fishbowl,(280,60))
 
         # fish
-        screen.blit(
-            self.patrick,
-            (
-                560,
-                230
-            )
-        )
+        screen.blit(self.patrick,(560,230))
 
         # dialogue
         if self.stage < len(self.dialogue):
-            text = self.font.render(
-                self.dialogue[self.stage],
-                True,
-                (255,255,255)
-            )
-            screen.blit(
-                text,
-                (
-                    420,
-                    650
-                )
-            )
+            text = self.font.render(self.dialogue[self.stage],True,(255,255,255))
+            screen.blit(text,(420,650))
 
 # Create cutscene
 cutscene = FishCutscene()
