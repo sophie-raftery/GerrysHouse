@@ -75,9 +75,9 @@ class Player(pygame.sprite.Sprite):
 # Mother — patrol NPC using same logic as Dog from Test_level
 # ---------------------------------------------------------------------------
 class Mother(pygame.sprite.Sprite):
-    SPEED         = 50
-    CHASE_SPEED   = 110
-    AGRO_RADIUS   = 300          # ~3× player sprite width
+    SPEED         = 100
+    CHASE_SPEED   = 150
+    AGRO_RADIUS   = 180          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 200
     FEELER_LEN    = 70
@@ -225,7 +225,7 @@ class Mother(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Collision rectangles
 # ---------------------------------------------------------------------------
-DEBUG_COLLISIONS = False
+DEBUG_COLLISIONS = True
 
 _WALL_T = 40
 COLLISION_RECTS = [
@@ -470,8 +470,8 @@ def run(incoming_hotbar_slots=None):
                     elif vinyl_player.show_prompt:
                         if vinyl_player.interact(overlay.hotbar):
                             # Mother gets faster now the vinyl is taken
-                            mother.SPEED       = 90
-                            mother.CHASE_SPEED = 170
+                            mother.SPEED       = 150
+                            mother.CHASE_SPEED = 200
 
         exit_door.update(player)
         vinyl_player.update(player, dt)

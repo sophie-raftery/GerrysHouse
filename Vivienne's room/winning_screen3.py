@@ -67,8 +67,8 @@ def run():
     font_sub = pygame.font.SysFont(None, 32)
     title = font_big.render("Level Complete!", True, (60, 30, 100))
     title_shd = font_big.render("Level Complete!", True, (0, 0, 0))
-    subtitle = font_sub.render("Press to continue to Level 2", True, (255, 255, 255))
-    sub_shd = font_sub.render("Press to continue to Level 2", True, (0, 0, 0))
+    subtitle = font_sub.render("Press to continue to Level 4", True, (255, 255, 255))
+    sub_shd = font_sub.render("Press to continue to Level 4", True, (0, 0, 0))
 
     angle   = 0
     running = True
