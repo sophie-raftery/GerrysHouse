@@ -75,8 +75,8 @@ class Player(pygame.sprite.Sprite):
 # Father — walks back and forth in lower garage; pauses at car every 2nd lap
 # ---------------------------------------------------------------------------
 class Father(pygame.sprite.Sprite):
-    SPEED         = 55
-    CHASE_SPEED   = 120
+    SPEED         = 100
+    CHASE_SPEED   = 160
     AGRO_RADIUS   = 144          # ~3× player sprite width
     WAYPOINT_DIST = 22
     ANIM_INTERVAL = 200
