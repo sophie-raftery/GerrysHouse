@@ -653,6 +653,7 @@ def run():
         # Dog catch — if dog rect overlaps player, trigger lose screen
         if dog.rect.colliderect(player.rect) and not dog._at_bowl:
             walk_sound.stop()
+            shared_state.restart_level = "Level1/Test_level.py"
             lose_door.transition(display_surface)
             lose_door.load_next_level()
             return
@@ -708,5 +709,5 @@ if __name__ == "__main__":
     run()
 
 
-    
+
 #4124

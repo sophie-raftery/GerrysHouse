@@ -469,6 +469,7 @@ def run(incoming_hotbar_slots=None):
 
         # Father catch — if father touches player while chasing, go to lose screen
         if father._chasing and father.rect.colliderect(player.rect):
+            shared_state.restart_level = "Level 3/Garage Lvl 3.py"
             lose_door.transition(display_surface)
             lose_door.load_next_level()
             return
@@ -533,5 +534,5 @@ if __name__ == "__main__":
 
 
 
-    
+
 #21424
