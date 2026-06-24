@@ -8,4 +8,4 @@ incoming_hotbar_slots = None   # list[InventoryItem | None]
 returned_hotbar_slots = None   # list[InventoryItem | None]
 
 # Optional spawn position for the player when returning to a garden level.
-return_spawn = None            # (x, y) tuple or None
+restart_level = None            # file path set before lose screen, read by ending.py on restart

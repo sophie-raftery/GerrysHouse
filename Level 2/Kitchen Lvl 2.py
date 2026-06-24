@@ -480,6 +480,7 @@ def run(incoming_hotbar_slots=None):
 
         # Mother catch — if mother touches player while chasing, go to lose screen
         if mother._chasing and mother.rect.colliderect(player.rect):
+            shared_state.restart_level = "Level 2/Kitchen Lvl 2.py"
             lose_door.transition(display_surface)
             lose_door.load_next_level()
             return
@@ -562,5 +563,5 @@ def run(incoming_hotbar_slots=None):
 
     pygame.quit()
 
-    
+
 #sdegfefafe
