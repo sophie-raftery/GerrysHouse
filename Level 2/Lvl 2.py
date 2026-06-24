@@ -209,12 +209,19 @@ def run(incoming_hotbar_slots=None):
     )
     
     # Vinyl door — requires a vinyl record; leads to winning screen
+    VINYL_DOOR_POS     = (1118, 710)  # ← adjust position here
+    VINYL_DOOR_SIZE    = (75, 80)     # ← adjust size here
+    VINYL_DOOR_VISIBLE = False        # ← set True to see it while positioning
     vinyl_door = Door(
-        pos           = (200, 400),
+        pos           = VINYL_DOOR_POS,
         target_module = "Vivienne's room/winning_screen2.py",
         image_path    = None,
-        size          = (50, 70),
+        size          = VINYL_DOOR_SIZE,
     )
+    if VINYL_DOOR_VISIBLE:
+        vinyl_door.image.fill((0, 0, 0))
+    else:
+        vinyl_door.image = pygame.Surface(VINYL_DOOR_SIZE, pygame.SRCALPHA)
 
     _vinyl_names  = {"MJ_Vinyl", "Billy_Vinyl", "Katie_Vinyl"}
     _msg_text     = ""
