@@ -373,3 +373,6 @@ def run():
         resolve_collision(player)
 
     pygame.quit()
+
+    
+#2424

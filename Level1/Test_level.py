@@ -522,12 +522,19 @@ def run():
     )
 
     # Vinyl door — requires a vinyl record; leads to winning screen
+    VINYL_DOOR_POS     = (1025, 710)  # ← adjust position here
+    VINYL_DOOR_SIZE    = (75, 80)     # ← adjust size here
+    VINYL_DOOR_VISIBLE = False        # ← set True to see it while positioning
     vinyl_door = Door(
-        pos           = (200, 400),
+        pos           = VINYL_DOOR_POS,
         target_module = "Vivienne's room/winning_screen1.py",
         image_path    = None,
-        size          = (50, 70),
+        size          = VINYL_DOOR_SIZE,
     )
+    if VINYL_DOOR_VISIBLE:
+        vinyl_door.image.fill((0, 0, 0))
+    else:
+        vinyl_door.image = pygame.Surface(VINYL_DOOR_SIZE, pygame.SRCALPHA)
 
     # Lose door — used when the dog catches the player (invisible, no fixed pos needed)
     lose_door = Door(
@@ -555,7 +562,7 @@ def run():
     ]
 
     walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-    walk_sound.set_volume(0.1)
+    walk_sound.set_volume(0.0)
 
     clock  = pygame.time.Clock()
     running = True
@@ -699,3 +706,7 @@ def run():
 
 if __name__ == "__main__":
     run()
+
+
+    
+#4124

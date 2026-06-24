@@ -164,19 +164,13 @@ def run(incoming_hotbar_slots=None):
         image_path    = None,
         size          = (40, 60),
     )
-    vinyl_door = Door(
-        pos           = (200, 100),
-        target_module = "Vivienne's room/winning_screen1.py",
-        image_path    = None,
-        size          = (50, 70),
-    )
 
     # Sprites
     all_sprites = pygame.sprite.Group()
     player      = Player(all_sprites)
 
     walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-    walk_sound.set_volume(0.9)
+    walk_sound.set_volume(0.0)
 
     _msg_text     = ""
     _msg_timer    = 0
@@ -193,7 +187,6 @@ def run(incoming_hotbar_slots=None):
         display_surface.blit(garage_front,    (5, 5))
         all_sprites.draw(display_surface)
         front_door.draw(display_surface)
-        vinyl_door.draw(display_surface)
         overlay.display(display_surface)
         fade_surf.set_alpha(alpha)
         display_surface.blit(fade_surf, (0, 0))
@@ -244,7 +237,6 @@ def run(incoming_hotbar_slots=None):
                             _msg_timer = pygame.time.get_ticks()
 
         front_door.update(player)
-        vinyl_door.update(player)
         all_sprites.update(dt)
         resolve_collision(player)
 
@@ -256,7 +248,6 @@ def run(incoming_hotbar_slots=None):
         player.player_walk_sound()
         all_sprites.draw(display_surface)
         front_door.draw(display_surface)
-        vinyl_door.draw(display_surface)
 
         if _msg_text and pygame.time.get_ticks() - _msg_timer < _MSG_DURATION:
             _lbl      = _msg_font.render(_msg_text, True, (255, 80, 80))
@@ -281,3 +272,7 @@ def run(incoming_hotbar_slots=None):
 if __name__ == "__main__":
     os.chdir(os.path.join(_HERE, ".."))
     run()
+
+
+    
+#2412
