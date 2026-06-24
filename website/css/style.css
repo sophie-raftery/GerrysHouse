@@ -1021,6 +1021,18 @@ section {
   font-size: 0.85rem;
 }
 
+/* FIX BULLET POINTS */
+.dev-notes ul {
+  text-align: left;
+  list-style-type: disc;
+  padding-left: 2rem;
+  width: 80%;
+}
+
+.dev-notes li {
+  margin-bottom: 0.5rem;
+}
+
 /* ============================================
    LEVEL NAVIGATION
    ============================================ */
