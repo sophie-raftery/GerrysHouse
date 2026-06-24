@@ -209,7 +209,7 @@ def run(incoming_hotbar_slots=None):
     )
     
     # Vinyl door — requires a vinyl record; leads to winning screen
-    VINYL_DOOR_POS     = (1118, 710)  # ← adjust position here
+    VINYL_DOOR_POS     = (1025, 710)  # ← adjust position here
     VINYL_DOOR_SIZE    = (75, 80)     # ← adjust size here
     VINYL_DOOR_VISIBLE = False        # ← set True to see it while positioning
     vinyl_door = Door(
@@ -234,7 +234,7 @@ def run(incoming_hotbar_slots=None):
     player = Player(all_sprites)
 
     walk_sound = pygame.mixer.Sound(join("Daniel's Room", "Audios", "Grass footsteps.wav"))
-    walk_sound.set_volume(0.1)
+    walk_sound.set_volume(0.0)
 
     # Fade in
     fade_surf = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
