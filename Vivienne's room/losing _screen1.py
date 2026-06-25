@@ -22,14 +22,15 @@ Sprite = pygame.transform.smoothscale(
     )
 
 Retry_button = pygame.image.load(join("images", "buttons", "restart_button.png")).convert_alpha()
+Retry_button = pygame.transform.scale(Retry_button, (300, 160))
 Exit_button  = pygame.image.load(join("images", "buttons", "exit button.png")).convert_alpha()
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 center_x = screen.get_width() // 2
 
 Sprite_rect = Sprite.get_rect(center=(center_x, 340))
-Retry_rect  = Retry_button.get_rect(center=(center_x - 80, 620))
-Exit_rect   = Exit_button.get_rect(center=(center_x + 80, 620))
+Retry_rect  = Retry_button.get_rect(center=(center_x, 450))
+Exit_rect   = Exit_button.get_rect(center=(center_x, 620))
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def launch_level1():

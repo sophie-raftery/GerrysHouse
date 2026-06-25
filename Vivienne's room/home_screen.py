@@ -14,7 +14,7 @@ clock = pygame.time.Clock()
 # ── Game-state constants ──────────────────────────────────────────────────────
 HOME      = 0
 MAIN_MENU = 1
-SETTINGS  = 2
+# SETTINGS  = 2
 
 game_state = HOME
 
@@ -38,15 +38,15 @@ Setting_button  = pygame.image.load(join("images", "buttons", "setting button.pn
 Exit_button     = pygame.image.load(join("images", "buttons", "exit button.png")).convert_alpha()
 
 Play_rect     = Play_button.get_rect(center=(640, 280))
-Settings_rect = Setting_button.get_rect(center=(640, 380))
+# Settings_rect = Setting_button.get_rect(center=(640, 380))
 Exit_rect     = Exit_button.get_rect(center=(640, 480))
 
 # ── Settings assets ───────────────────────────────────────────────────────────
-Volume_button = pygame.image.load(join("images", "buttons", "volume.png")).convert_alpha()
-Back_button   = pygame.image.load(join("images", "buttons", "back arrow.png")).convert_alpha()
+# Volume_button = pygame.image.load(join("images", "buttons", "volume.png")).convert_alpha()
+# Back_button   = pygame.image.load(join("images", "buttons", "back arrow.png")).convert_alpha()
 
-Volume_rect = Volume_button.get_rect(center=(640, 300))
-Back_rect   = Back_button.get_rect(topleft=(30, 30))
+# Volume_rect = Volume_button.get_rect(center=(640, 300))
+# Back_rect   = Back_button.get_rect(topleft=(30, 30))
 
 # ── Player sprite ─────────────────────────────────────────────────────────────
 class Player(pygame.sprite.Sprite):
@@ -113,25 +113,25 @@ while running:
                     subprocess.Popen([sys.executable, level1_path], cwd=root_dir)
                     running = False   # close the home screen once the game launches
 
-                elif Settings_rect.collidepoint(event.pos):
-                    game_state = SETTINGS
+                # elif Settings_rect.collidepoint(event.pos):
+                #     game_state = SETTINGS
 
                 elif Exit_rect.collidepoint(event.pos):
                     running = False
 
             # SETTINGS button clicks
-            elif game_state == SETTINGS:
-                if Volume_rect.collidepoint(event.pos):
-                    print("Volume clicked")
+            # elif game_state == SETTINGS:
+            #     if Volume_rect.collidepoint(event.pos):
+            #         print("Volume clicked")
 
-                elif Back_rect.collidepoint(event.pos):
-                    game_state = MAIN_MENU
+            #     elif Back_rect.collidepoint(event.pos):
+            #         game_state = MAIN_MENU
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                if game_state == SETTINGS:
-                    game_state = MAIN_MENU
-                elif game_state == MAIN_MENU:
+                # if game_state == SETTINGS:
+                #     game_state = MAIN_MENU
+                if game_state == MAIN_MENU:
                     game_state = HOME
 
     # ── Draw ──────────────────────────────────────────────────────────────────
@@ -147,13 +147,13 @@ while running:
     elif game_state == MAIN_MENU:
         screen.fill((30, 30, 30))
         screen.blit(Play_button,    Play_rect)
-        screen.blit(Setting_button, Settings_rect)
+        # screen.blit(Setting_button, Settings_rect)
         screen.blit(Exit_button,    Exit_rect)
 
-    elif game_state == SETTINGS:
-        screen.fill((30, 30, 30))
-        screen.blit(Volume_button, Volume_rect)
-        screen.blit(Back_button,   Back_rect)
+    # elif game_state == SETTINGS:
+    #     screen.fill((30, 30, 30))
+    #     screen.blit(Volume_button, Volume_rect)
+    #     screen.blit(Back_button,   Back_rect)
 
     pygame.display.update()
 

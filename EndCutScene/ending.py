@@ -182,8 +182,9 @@ class FishCutscene:
         # ── Game-over button positions ────────────────────────────────────────
         cx = WINDOW_SIZE[0] // 2
         self.go_img_rect = self.game_over_img.get_rect(center=(cx, 280))
-        self.retry_rect  = self.retry_btn.get_rect(center=(cx - 90, 560))
-        self.exit_rect   = self.exit_btn.get_rect(center=(cx + 90, 560))
+        self.retry_btn  = pygame.transform.scale(self.retry_btn, (350, 300))   # scale first
+        self.retry_rect = self.retry_btn.get_rect(center=(cx, 550)) 
+        self.exit_rect   = self.exit_btn.get_rect(center=(cx, 640))
  
     # ── Helpers ───────────────────────────────────────────────────────────────
     def _launch_main_menu(self):
